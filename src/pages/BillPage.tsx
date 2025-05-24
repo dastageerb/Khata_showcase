@@ -4,15 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X, Plus, Printer, Save, Search } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { X, Plus, Printer, Save } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 
 interface BillItem {
   id: string;
@@ -25,10 +21,10 @@ interface BillItem {
 const BillPage: React.FC = () => {
   const { state, dispatch, generateId, addHistoryEntry } = useApp();
   const { toast } = useToast();
-  const [customer, setCustomer] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([]);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
-  const [productSearch, setProductSearch] = useState('');
-  const [openProductSelect, setOpenProductSelect] = useState(false);
   const [currentItem, setCurrentItem] = useState({
     product_name: '',
     quantity: 1,
@@ -37,30 +33,30 @@ const BillPage: React.FC = () => {
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [generatedBill, setGeneratedBill] = useState<any>(null);
 
-  // Filter products based on search term
-  const filteredProducts = state.products.filter(product => 
-    product.name.toLowerCase().includes(productSearch.toLowerCase())
-  );
-
-  const handleSelectProduct = (productName: string) => {
-    const selectedProduct = state.products.find(p => p.name === productName);
-    
-    if (selectedProduct) {
-      setCurrentItem({
-        product_name: selectedProduct.name,
-        quantity: 1,
-        price: selectedProduct.last_price
-      });
+  // Filter customers based on typed name
+  useEffect(() => {
+    if (customerName.trim()) {
+      const filtered = state.customers.filter(customer => 
+        customer.name.toLowerCase().includes(customerName.toLowerCase())
+      );
+      setCustomerSuggestions(filtered);
+      setShowCustomerSuggestions(filtered.length > 0);
+    } else {
+      setCustomerSuggestions([]);
+      setShowCustomerSuggestions(false);
     }
-    
-    setOpenProductSelect(false);
+  }, [customerName, state.customers]);
+
+  const handleSelectCustomer = (customer: any) => {
+    setCustomerName(customer.name);
+    setShowCustomerSuggestions(false);
   };
 
   const handleAddItem = () => {
     if (!currentItem.product_name || currentItem.quantity <= 0 || currentItem.price <= 0) {
       toast({
         title: "Invalid Item",
-        description: "Please select a product and enter valid quantity and price",
+        description: "Please enter product name, valid quantity and price",
         variant: "destructive"
       });
       return;
@@ -93,10 +89,10 @@ const BillPage: React.FC = () => {
   };
 
   const handleGenerateBill = () => {
-    if (!customer) {
+    if (!customerName.trim()) {
       toast({
         title: "Customer Required",
-        description: "Please select a customer for this bill",
+        description: "Please enter a customer name for this bill",
         variant: "destructive"
       });
       return;
@@ -113,19 +109,9 @@ const BillPage: React.FC = () => {
     
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Simulate loading
     setTimeout(() => {
-      const selectedCustomer = state.customers.find(c => c.id === customer);
-      
-      if (!selectedCustomer) {
-        toast({
-          title: "Error",
-          description: "Selected customer not found",
-          variant: "destructive"
-        });
-        dispatch({ type: 'SET_LOADING', payload: false });
-        return;
-      }
+      // Find or use the customer
+      let selectedCustomer = state.customers.find(c => c.name.toLowerCase() === customerName.toLowerCase());
       
       // Increment bill serial number
       const newSerialNumber = state.settings.last_bill_serial + 1;
@@ -135,7 +121,7 @@ const BillPage: React.FC = () => {
       const newBill = {
         id: generateId('bill'),
         serial_no: billSerialNo,
-        customer_name: selectedCustomer.name,
+        customer_name: customerName,
         admin_phone: state.settings.admin_phone,
         date: new Date(),
         total_amount: calculateTotal(),
@@ -147,19 +133,12 @@ const BillPage: React.FC = () => {
         history: []
       };
       
-      // Add history entry for the bill
       addHistoryEntry(
-        newBill, 
-        'created', 
+        newBill,
+        'created',
         state.currentUser?.id || 'system',
         state.currentUser?.name || 'System',
-        'Bill generated',
-        null,
-        {
-          total_amount: calculateTotal(),
-          customer_name: selectedCustomer.name,
-          serial_no: billSerialNo
-        }
+        `Bill generated for ${customerName} - Total: ${calculateTotal()}`
       );
       
       dispatch({ type: 'ADD_BILL', payload: newBill });
@@ -180,86 +159,79 @@ const BillPage: React.FC = () => {
           history: []
         };
         
-        // Add history entry for the bill item
         addHistoryEntry(
-          billItem, 
-          'created', 
+          billItem,
+          'created',
           state.currentUser?.id || 'system',
           state.currentUser?.name || 'System',
-          'Bill item added',
-          null,
-          {
-            product_name: item.product_name,
-            quantity: item.quantity,
-            price: item.price,
-            amount: item.amount
-          }
+          `Bill item added: ${item.product_name} x${item.quantity}`
         );
         
         return billItem;
       });
       
-      // Dispatch all bill items
       newBillItems.forEach(item => {
         dispatch({ type: 'ADD_BILL_ITEM', payload: item });
       });
       
-      // Record this as a customer transaction as well
-      const newTransaction = {
-        id: generateId('ct'),
-        customer_id: customer,
-        date: new Date(),
-        quantity: billItems.reduce((total, item) => total + item.quantity, 0),
-        payment_mode: "Cash", // Default to cash
-        bill_id: billSerialNo,
-        purchase_description: `Bill #${billSerialNo}`,
-        additional_notes: `${billItems.length} items purchased`,
-        amount: calculateTotal(),
-        created_by: state.currentUser?.id || 'system',
-        created_at: new Date(),
+      // If customer exists, record transaction
+      if (selectedCustomer) {
+        const newTransaction = {
+          id: generateId('ct'),
+          customer_id: selectedCustomer.id,
+          date: new Date(),
+          quantity: billItems.reduce((total, item) => total + item.quantity, 0),
+          payment_mode: "Cash",
+          bill_id: billSerialNo,
+          purchase_description: `Bill #${billSerialNo}`,
+          additional_notes: `${billItems.length} items purchased`,
+          amount: calculateTotal(),
+          type: 'debit' as 'debit',
+          created_by: state.currentUser?.id || 'system',
+          created_at: new Date(),
+          updated_at: new Date(),
+          updated_by: state.currentUser?.id || 'system',
+          history: []
+        };
+        
+        addHistoryEntry(
+          newTransaction,
+          'created',
+          state.currentUser?.id || 'system',
+          state.currentUser?.name || 'System',
+          `Transaction recorded from bill - Debit: ${calculateTotal()}`
+        );
+        
+        dispatch({ type: 'ADD_CUSTOMER_TRANSACTION', payload: newTransaction });
+      }
+      
+      // Update settings with new bill serial
+      const updatedSettings = {
+        ...state.settings,
+        last_bill_serial: newSerialNumber,
         updated_at: new Date(),
-        updated_by: state.currentUser?.id || 'system',
-        history: []
+        updated_by: state.currentUser?.id || 'system'
       };
       
-      // Add history entry for the transaction
-      addHistoryEntry(
-        newTransaction, 
-        'created', 
-        state.currentUser?.id || 'system',
-        state.currentUser?.name || 'System',
-        'Transaction recorded from bill',
-        null,
-        {
-          amount: calculateTotal(),
-          bill_id: billSerialNo
-        }
-      );
+      dispatch({ type: 'UPDATE_SETTINGS', payload: updatedSettings });
       
-      dispatch({ type: 'ADD_CUSTOMER_TRANSACTION', payload: newTransaction });
-      
-      // Store generated bill for print dialog
       setGeneratedBill({
         ...newBill,
         items: [...billItems],
-        customerName: selectedCustomer.name,
-        customerPhone: selectedCustomer.phone,
-        customerAddress: selectedCustomer.address
+        customerName: customerName,
+        customerPhone: selectedCustomer?.phone || '',
+        customerAddress: selectedCustomer?.address || ''
       });
       
-      // Reset the form
-      setCustomer('');
+      setCustomerName('');
       setBillItems([]);
       
-      // Show success message
       toast({
         title: "Bill Generated",
         description: `Bill #${billSerialNo} has been created successfully`,
       });
       
-      // Open print dialog
       setIsPrintDialogOpen(true);
-      
       dispatch({ type: 'SET_LOADING', payload: false });
     }, 1000);
   };
@@ -279,42 +251,30 @@ const BillPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="customer">Select Customer</Label>
-                  <Select value={customer} onValueChange={setCustomer}>
-                    <SelectTrigger id="customer">
-                      <SelectValue placeholder="Select a customer" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {state.customers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
+                <div className="space-y-2 relative">
+                  <Label htmlFor="customer">Customer Name</Label>
+                  <Input
+                    id="customer"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Type customer name..."
+                    onFocus={() => customerName && setShowCustomerSuggestions(customerSuggestions.length > 0)}
+                  />
+                  {showCustomerSuggestions && (
+                    <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                      {customerSuggestions.map((customer) => (
+                        <div
+                          key={customer.id}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectCustomer(customer)}
+                        >
+                          <div className="font-medium">{customer.name}</div>
+                          <div className="text-sm text-gray-500">{customer.phone}</div>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  )}
                 </div>
-                
-                {customer && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 p-4 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Name</p>
-                      <p className="font-semibold">
-                        {state.customers.find(c => c.id === customer)?.name}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Phone</p>
-                      <p>{state.customers.find(c => c.id === customer)?.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Address</p>
-                      <p className="text-sm">
-                        {state.customers.find(c => c.id === customer)?.address || 'Not provided'}
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -325,53 +285,15 @@ const BillPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {/* Add item form */}
                 <div className="grid grid-cols-12 gap-2">
                   <div className="col-span-12 sm:col-span-5">
-                    <Label htmlFor="product" className="mb-2 block">Product</Label>
-                    <Popover open={openProductSelect} onOpenChange={setOpenProductSelect}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openProductSelect}
-                          className="w-full justify-between"
-                        >
-                          {currentItem.product_name || "Select product..."}
-                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput 
-                            placeholder="Search products..." 
-                            value={productSearch}
-                            onValueChange={setProductSearch}
-                          />
-                          <CommandEmpty>No products found.</CommandEmpty>
-                          <CommandGroup>
-                            {filteredProducts.map((product) => (
-                              <CommandItem
-                                key={product.id}
-                                value={product.name}
-                                onSelect={handleSelectProduct}
-                              >
-                                <div className="flex justify-between w-full">
-                                  <span>{product.name}</span>
-                                  <span className="text-gray-500">
-                                    {new Intl.NumberFormat('en-US', { 
-                                      style: 'currency', 
-                                      currency: 'PKR',
-                                      currencyDisplay: 'narrowSymbol'
-                                    }).format(product.last_price)}
-                                  </span>
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <Label htmlFor="product" className="mb-2 block">Product Name</Label>
+                    <Input
+                      id="product"
+                      value={currentItem.product_name}
+                      onChange={(e) => setCurrentItem({...currentItem, product_name: e.target.value})}
+                      placeholder="Enter product name..."
+                    />
                   </div>
                   
                   <div className="col-span-4 sm:col-span-2">
@@ -412,7 +334,6 @@ const BillPage: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Items list */}
                 {billItems.length === 0 ? (
                   <div className="text-center py-8 bg-gray-50 rounded-lg">
                     <p className="text-gray-500">No items added to this bill yet</p>
@@ -590,7 +511,9 @@ const BillPage: React.FC = () => {
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-gray-500">Customer:</p>
                   <p className="font-semibold">{generatedBill.customerName}</p>
-                  <p className="text-sm">{generatedBill.customerPhone}</p>
+                  {generatedBill.customerPhone && (
+                    <p className="text-sm">{generatedBill.customerPhone}</p>
+                  )}
                   {generatedBill.customerAddress && (
                     <p className="text-sm">{generatedBill.customerAddress}</p>
                   )}
