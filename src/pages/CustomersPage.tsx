@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Edit2, Plus, Trash2, Search, Eye } from 'lucide-react';
-import HistoryTimeline from '@/components/history/HistoryTimeline';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import HistoryDialog from '@/components/history/HistoryDialog';
 import { Customer } from '@/context/AppContext';
 
@@ -281,86 +280,68 @@ const CustomersPage: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {customers.map((customer) => (
-            <Card key={customer.id} className="transition-all hover:shadow-md">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex justify-between items-center">
-                  <span className="truncate">{customer.name}</span>
-                  <div className="flex space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleViewCustomer(customer)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleOpenForm(customer)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleConfirmDelete(customer)} 
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Phone</p>
-                  <p>{customer.phone}</p>
-                </div>
-                
-                {customer.address && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Address</p>
-                    <p className="text-sm line-clamp-2">{customer.address}</p>
-                  </div>
-                )}
-                
-                {customer.nic_number && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">NIC Number</p>
-                    <p>{customer.nic_number}</p>
-                  </div>
-                )}
-                
-                <div className="pt-2">
-                  <p className="text-sm font-medium text-gray-500">Current Balance</p>
-                  <p className="text-lg font-bold text-primary">
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>NIC Number</TableHead>
+                <TableHead>Balance</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {customers.map((customer) => (
+                <TableRow key={customer.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell>{customer.phone}</TableCell>
+                  <TableCell>{customer.address || 'Not provided'}</TableCell>
+                  <TableCell>{customer.nic_number || 'Not provided'}</TableCell>
+                  <TableCell className="font-bold text-primary">
                     {new Intl.NumberFormat('en-US', { 
                       style: 'currency', 
                       currency: 'PKR',
                       currencyDisplay: 'narrowSymbol'
                     }).format(calculateCustomerBalance(customer.id))}
-                  </p>
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleViewHistory(customer)}
-                  className="w-full"
-                >
-                  View History
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleViewCustomer(customer)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleOpenForm(customer)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleConfirmDelete(customer)} 
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
-      
-      {/* Customer Form Dialog */}
+
+      {/* All dialogs remain the same */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

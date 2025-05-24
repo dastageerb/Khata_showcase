@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Download, Search, SlidersHorizontal } from 'lucide-react';
+import { CalendarIcon, Download, Search, SlidersHorizontal, History } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import HistoryDialog from '@/components/history/HistoryDialog';
 import { Transaction } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
@@ -53,20 +54,16 @@ const TransactionsPage: React.FC = () => {
     // Search filter
     if (searchQuery) {
       filteredTransactions = filteredTransactions.filter(transaction => {
-        // Check description
         const matchesDescription = transaction.purchase_description
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
         
-        // Check bill id
         const matchesBillId = transaction.bill_id
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
           
-        // Check amount (convert to string for search)
         const matchesAmount = transaction.amount.toString().includes(searchQuery);
         
-        // Check customer or company name
         let entityName = '';
         if ('customer_id' in transaction) {
           const customer = state.customers.find(c => c.id === transaction.customer_id);
@@ -130,7 +127,6 @@ const TransactionsPage: React.FC = () => {
   };
 
   const handleExportData = () => {
-    // Simulate exporting data as CSV
     const csvHeader = 'Date,Entity,Description,Amount,Payment Mode,Bill ID\n';
     
     const csvRows = transactions.map(transaction => {
@@ -148,7 +144,7 @@ const TransactionsPage: React.FC = () => {
       }
       
       const date = format(new Date(transaction.date), 'yyyy-MM-dd');
-      const description = transaction.purchase_description.replace(/,/g, ';'); // Replace commas to avoid CSV issues
+      const description = transaction.purchase_description.replace(/,/g, ';');
       const amount = transaction.amount;
       const paymentMode = transaction.payment_mode;
       const billId = transaction.bill_id;
@@ -158,8 +154,6 @@ const TransactionsPage: React.FC = () => {
     
     const csvContent = csvHeader + csvRows;
     
-    // In a real app, we would create a download link
-    // For this prototype, we'll just show a toast notification
     console.log('CSV Export:', csvContent);
     
     toast({
@@ -380,7 +374,7 @@ const TransactionsPage: React.FC = () => {
   );
 };
 
-// Helper component for transaction list
+// Helper component for transaction list table
 interface TransactionsListProps {
   transactions: Transaction[];
   getEntityName: (transaction: Transaction) => string;
@@ -406,81 +400,74 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   }
   
   return (
-    <div className="space-y-4">
-      {transactions.map((transaction) => {
-        const entityName = getEntityName(transaction);
-        const entityType = getEntityType(transaction);
-        
-        return (
-          <Card key={transaction.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-0">
-              <div className="flex flex-col md:flex-row border-b">
-                <div className="p-4 md:w-2/3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{entityName}</h3>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {entityType}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {format(new Date(transaction.date), 'MMM d, yyyy')}
-                    </div>
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Entity</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Quantity</TableHead>
+            <TableHead>Payment Mode</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Bill ID</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactions.map((transaction) => {
+            const entityName = getEntityName(transaction);
+            const entityType = getEntityType(transaction);
+            
+            return (
+              <TableRow key={transaction.id} className="hover:bg-muted/50">
+                <TableCell>
+                  {format(new Date(transaction.date), 'MMM d, yyyy')}
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{entityName}</span>
+                    <span className={`text-xs px-2 py-1 rounded w-fit ${
+                      entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      {entityType}
+                    </span>
                   </div>
-                  
+                </TableCell>
+                <TableCell>
                   <div>
                     <p className="font-medium">{transaction.purchase_description}</p>
                     {transaction.additional_notes && (
                       <p className="text-sm text-gray-500 mt-1">{transaction.additional_notes}</p>
                     )}
                   </div>
-                </div>
-                
-                <div className="p-4 md:w-1/3 md:border-l flex flex-col justify-center space-y-2 bg-gray-50">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Amount:</span>
-                    <span className="font-bold text-lg text-primary">
-                      {new Intl.NumberFormat('en-US', { 
-                        style: 'currency', 
-                        currency: 'PKR',
-                        currencyDisplay: 'narrowSymbol'
-                      }).format(transaction.amount)}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Qty:</span>
-                    <span>{transaction.quantity}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Payment:</span>
-                    <span>{transaction.payment_mode}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Bill ID:</span>
-                    <span>{transaction.bill_id}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 flex justify-end">
-                <Button 
-                  variant="link" 
-                  onClick={() => viewTransactionHistory(transaction)}
-                  className="text-sm"
-                >
-                  View History
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+                </TableCell>
+                <TableCell>{transaction.quantity}</TableCell>
+                <TableCell>{transaction.payment_mode}</TableCell>
+                <TableCell className="font-bold text-primary">
+                  {new Intl.NumberFormat('en-US', { 
+                    style: 'currency', 
+                    currency: 'PKR',
+                    currencyDisplay: 'narrowSymbol'
+                  }).format(transaction.amount)}
+                </TableCell>
+                <TableCell>{transaction.bill_id}</TableCell>
+                <TableCell>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => viewTransactionHistory(transaction)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <History className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </Card>
   );
 };
 

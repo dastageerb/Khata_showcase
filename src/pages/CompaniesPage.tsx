@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,12 +9,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Edit2, Plus, Trash2, Search, Eye } from 'lucide-react';
-import HistoryTimeline from '@/components/history/HistoryTimeline';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import HistoryDialog from '@/components/history/HistoryDialog';
 import { Company } from '@/context/AppContext';
 
 const CompaniesPage: React.FC = () => {
-  const { state, dispatch, generateId, addHistoryEntry, calculateCompanyBalance } = useApp();
+  const { state, dispatch, generateId, calculateCompanyBalance } = useApp();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [companies, setCompanies] = useState(state.companies);
@@ -34,7 +34,6 @@ const CompaniesPage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Filter companies based on search query
     if (searchQuery) {
       const filtered = state.companies.filter(company => 
         company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -91,7 +90,6 @@ const CompaniesPage: React.FC = () => {
     
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Simulate loading
     setTimeout(() => {
       dispatch({ type: 'DELETE_COMPANY', payload: selectedCompany.id });
       
@@ -112,18 +110,7 @@ const CompaniesPage: React.FC = () => {
     if (!formData.name || !formData.contact_number) {
       toast({
         title: "Missing Information",
-        description: "Company name and contact number are required",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Pakistani phone number validation (simple version)
-    const phoneRegex = /^\+92-\d{3}-\d{7}$/;
-    if (!phoneRegex.test(formData.contact_number)) {
-      toast({
-        title: "Invalid Contact Number",
-        description: "Contact number should be in format: +92-300-1234567",
+        description: "Name and contact number are required",
         variant: "destructive"
       });
       return;
@@ -131,10 +118,8 @@ const CompaniesPage: React.FC = () => {
     
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Simulate loading
     setTimeout(() => {
       if (isEditing) {
-        // Get existing company
         const existingCompany = state.companies.find(c => c.id === formData.id);
         if (!existingCompany) {
           toast({
@@ -146,7 +131,6 @@ const CompaniesPage: React.FC = () => {
           return;
         }
         
-        // Create updated company with history
         const updatedCompany = {
           ...existingCompany,
           name: formData.name,
@@ -156,25 +140,6 @@ const CompaniesPage: React.FC = () => {
           updated_by: state.currentUser?.id || 'system'
         };
         
-        // Add history entry
-        addHistoryEntry(
-          updatedCompany, 
-          'updated', 
-          state.currentUser?.id || 'system',
-          state.currentUser?.name || 'System',
-          'Company information updated',
-          {
-            name: existingCompany.name,
-            contact_number: existingCompany.contact_number,
-            address: existingCompany.address
-          },
-          {
-            name: formData.name,
-            contact_number: formData.contact_number,
-            address: formData.address
-          }
-        );
-        
         dispatch({ type: 'UPDATE_COMPANY', payload: updatedCompany });
         
         toast({
@@ -182,7 +147,6 @@ const CompaniesPage: React.FC = () => {
           description: `${formData.name}'s information has been updated`
         });
       } else {
-        // Create new company
         const newCompany = {
           id: generateId('company'),
           name: formData.name,
@@ -195,15 +159,6 @@ const CompaniesPage: React.FC = () => {
           updated_by: state.currentUser?.id || 'system',
           history: []
         };
-        
-        // Add history entry
-        addHistoryEntry(
-          newCompany, 
-          'created', 
-          state.currentUser?.id || 'system',
-          state.currentUser?.name || 'System',
-          'Company profile created'
-        );
         
         dispatch({ type: 'ADD_COMPANY', payload: newCompany });
         
@@ -260,79 +215,66 @@ const CompaniesPage: React.FC = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {companies.map((company) => (
-            <Card key={company.id} className="transition-all hover:shadow-md">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex justify-between items-center">
-                  <span className="truncate">{company.name}</span>
-                  <div className="flex space-x-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleViewCompany(company)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleOpenForm(company)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleConfirmDelete(company)} 
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Contact Number</p>
-                  <p>{company.contact_number}</p>
-                </div>
-                
-                {company.address && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Address</p>
-                    <p className="text-sm line-clamp-2">{company.address}</p>
-                  </div>
-                )}
-                
-                <div className="pt-2">
-                  <p className="text-sm font-medium text-gray-500">Current Balance</p>
-                  <p className="text-lg font-bold text-primary">
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Contact Number</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Balance</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {companies.map((company) => (
+                <TableRow key={company.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">{company.name}</TableCell>
+                  <TableCell>{company.contact_number}</TableCell>
+                  <TableCell>{company.address || 'Not provided'}</TableCell>
+                  <TableCell className="font-bold text-primary">
                     {new Intl.NumberFormat('en-US', { 
                       style: 'currency', 
                       currency: 'PKR',
                       currencyDisplay: 'narrowSymbol'
                     }).format(calculateCompanyBalance(company.id))}
-                  </p>
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleViewHistory(company)}
-                  className="w-full"
-                >
-                  View History
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleViewCompany(company)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleOpenForm(company)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleConfirmDelete(company)} 
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
-      
-      {/* Company Form Dialog */}
+
+      {/* Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -353,9 +295,9 @@ const CompaniesPage: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="contact_number">Contact Number</Label>
+              <Label htmlFor="contact">Contact Number</Label>
               <Input
-                id="contact_number"
+                id="contact"
                 value={formData.contact_number}
                 onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
                 placeholder="+92-300-1234567"
@@ -401,9 +343,7 @@ const CompaniesPage: React.FC = () => {
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              Company Details
-            </DialogTitle>
+            <DialogTitle>Company Details</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
             {selectedCompany && (
@@ -437,20 +377,16 @@ const CompaniesPage: React.FC = () => {
                 </div>
                 
                 <div className="border-t pt-4">
-                  <HistoryTimeline history={selectedCompany.history} limit={3} />
-                  
-                  {selectedCompany.history.length > 3 && (
-                    <Button 
-                      variant="link" 
-                      onClick={() => {
-                        setIsDetailOpen(false);
-                        setTimeout(() => setIsHistoryOpen(true), 100);
-                      }}
-                      className="mt-2 p-0 h-auto"
-                    >
-                      View complete history
-                    </Button>
-                  )}
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsDetailOpen(false);
+                      setTimeout(() => setIsHistoryOpen(true), 100);
+                    }}
+                    className="w-full"
+                  >
+                    View Transaction History
+                  </Button>
                 </div>
               </>
             )}
@@ -467,7 +403,7 @@ const CompaniesPage: React.FC = () => {
           <div className="space-y-4">
             <p>Are you sure you want to delete <strong>{selectedCompany?.name}</strong>?</p>
             <p className="text-sm text-gray-500">
-              This will permanently remove the company and all its associated data.
+              This will permanently remove the company and all their associated data.
               This action cannot be undone.
             </p>
             
