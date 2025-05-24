@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -55,7 +55,7 @@ const TransactionsPage: React.FC = () => {
     if (searchQuery) {
       filteredTransactions = filteredTransactions.filter(transaction => {
         const matchesDescription = transaction.purchase_description
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchQuery.toLowerCase());
         
         const matchesBillId = transaction.bill_id
@@ -127,7 +127,7 @@ const TransactionsPage: React.FC = () => {
   };
 
   const handleExportData = () => {
-    const csvHeader = 'Date,Entity,Description,Amount,Payment Mode,Bill ID\n';
+    const csvHeader = 'Date,Entity,Type,Description,Amount,Payment Mode,Bill ID\n';
     
     const csvRows = transactions.map(transaction => {
       let entityName = '';
@@ -144,12 +144,13 @@ const TransactionsPage: React.FC = () => {
       }
       
       const date = format(new Date(transaction.date), 'yyyy-MM-dd');
-      const description = transaction.purchase_description.replace(/,/g, ';');
+      const description = transaction.purchase_description?.replace(/,/g, ';') || '';
       const amount = transaction.amount;
       const paymentMode = transaction.payment_mode;
       const billId = transaction.bill_id;
+      const type = transaction.type;
       
-      return `${date},"${entityName} (${entityType})","${description}",${amount},"${paymentMode}","${billId}"`;
+      return `${date},"${entityName} (${entityType})","${type}","${description}",${amount},"${paymentMode}","${billId}"`;
     }).join('\n');
     
     const csvContent = csvHeader + csvRows;
@@ -367,7 +368,7 @@ const TransactionsPage: React.FC = () => {
           isOpen={isHistoryOpen}
           setIsOpen={setIsHistoryOpen}
           history={selectedTransaction.history}
-          title={`Transaction: ${selectedTransaction.purchase_description}`}
+          title={`Transaction: ${selectedTransaction.purchase_description || 'No description'}`}
         />
       )}
     </div>
@@ -406,6 +407,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Entity</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Payment Mode</TableHead>
@@ -435,8 +437,17 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                   </div>
                 </TableCell>
                 <TableCell>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    transaction.type === 'credit' 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
+                  </span>
+                </TableCell>
+                <TableCell>
                   <div>
-                    <p className="font-medium">{transaction.purchase_description}</p>
+                    <p className="font-medium">{transaction.purchase_description || 'No description'}</p>
                     {transaction.additional_notes && (
                       <p className="text-sm text-gray-500 mt-1">{transaction.additional_notes}</p>
                     )}
@@ -444,8 +455,10 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                 </TableCell>
                 <TableCell>{transaction.quantity}</TableCell>
                 <TableCell>{transaction.payment_mode}</TableCell>
-                <TableCell className="font-bold text-primary">
-                  {new Intl.NumberFormat('en-US', { 
+                <TableCell className={`font-bold ${
+                  transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
                     style: 'currency', 
                     currency: 'PKR',
                     currencyDisplay: 'narrowSymbol'

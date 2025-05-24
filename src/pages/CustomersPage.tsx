@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,21 +8,19 @@ import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit2, Plus, Trash2, Search, Eye } from 'lucide-react';
+import { Edit2, Plus, Trash2, Search } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import HistoryDialog from '@/components/history/HistoryDialog';
 import { Customer } from '@/context/AppContext';
 
 const CustomersPage: React.FC = () => {
-  const { state, dispatch, generateId, addHistoryEntry, calculateCustomerBalance } = useApp();
+  const navigate = useNavigate();
+  const { state, dispatch, generateId, calculateCustomerBalance } = useApp();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [customers, setCustomers] = useState(state.customers);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
   // Form state
@@ -74,19 +73,19 @@ const CustomersPage: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleViewCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setIsDetailOpen(true);
+  const handleRowClick = (customer: Customer) => {
+    navigate(`/customers/${customer.id}`);
   };
 
-  const handleViewHistory = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setIsHistoryOpen(true);
-  };
-
-  const handleConfirmDelete = (customer: Customer) => {
+  const handleConfirmDelete = (e: React.MouseEvent, customer: Customer) => {
+    e.stopPropagation();
     setSelectedCustomer(customer);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleEdit = (e: React.MouseEvent, customer: Customer) => {
+    e.stopPropagation();
+    handleOpenForm(customer);
   };
 
   const handleDelete = () => {
@@ -94,7 +93,6 @@ const CustomersPage: React.FC = () => {
     
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Simulate loading
     setTimeout(() => {
       dispatch({ type: 'DELETE_CUSTOMER', payload: selectedCustomer.id });
       
@@ -121,36 +119,10 @@ const CustomersPage: React.FC = () => {
       return;
     }
     
-    // Pakistani phone number validation (simple version)
-    const phoneRegex = /^\+92-\d{3}-\d{7}$/;
-    if (!phoneRegex.test(formData.phone)) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Phone number should be in format: +92-300-1234567",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Pakistani NIC validation (if provided)
-    if (formData.nic_number) {
-      const nicRegex = /^\d{5}-\d{7}-\d{1}$/;
-      if (!nicRegex.test(formData.nic_number)) {
-        toast({
-          title: "Invalid NIC Number",
-          description: "NIC should be in format: 12345-6789012-3",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Simulate loading
     setTimeout(() => {
       if (isEditing) {
-        // Get existing customer
         const existingCustomer = state.customers.find(c => c.id === formData.id);
         if (!existingCustomer) {
           toast({
@@ -162,7 +134,6 @@ const CustomersPage: React.FC = () => {
           return;
         }
         
-        // Create updated customer with history
         const updatedCustomer = {
           ...existingCustomer,
           name: formData.name,
@@ -173,27 +144,6 @@ const CustomersPage: React.FC = () => {
           updated_by: state.currentUser?.id || 'system'
         };
         
-        // Add history entry
-        addHistoryEntry(
-          updatedCustomer, 
-          'updated', 
-          state.currentUser?.id || 'system',
-          state.currentUser?.name || 'System',
-          'Customer information updated',
-          {
-            name: existingCustomer.name,
-            phone: existingCustomer.phone,
-            address: existingCustomer.address,
-            nic_number: existingCustomer.nic_number
-          },
-          {
-            name: formData.name,
-            phone: formData.phone,
-            address: formData.address,
-            nic_number: formData.nic_number
-          }
-        );
-        
         dispatch({ type: 'UPDATE_CUSTOMER', payload: updatedCustomer });
         
         toast({
@@ -201,7 +151,6 @@ const CustomersPage: React.FC = () => {
           description: `${formData.name}'s information has been updated`
         });
       } else {
-        // Create new customer
         const newCustomer = {
           id: generateId('customer'),
           name: formData.name,
@@ -215,15 +164,6 @@ const CustomersPage: React.FC = () => {
           updated_by: state.currentUser?.id || 'system',
           history: []
         };
-        
-        // Add history entry
-        addHistoryEntry(
-          newCustomer, 
-          'created', 
-          state.currentUser?.id || 'system',
-          state.currentUser?.name || 'System',
-          'Customer profile created'
-        );
         
         dispatch({ type: 'ADD_CUSTOMER', payload: newCustomer });
         
@@ -294,7 +234,11 @@ const CustomersPage: React.FC = () => {
             </TableHeader>
             <TableBody>
               {customers.map((customer) => (
-                <TableRow key={customer.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow 
+                  key={customer.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleRowClick(customer)}
+                >
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>{customer.phone}</TableCell>
                   <TableCell>{customer.address || 'Not provided'}</TableCell>
@@ -311,15 +255,7 @@ const CustomersPage: React.FC = () => {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleViewCustomer(customer)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleOpenForm(customer)}
+                        onClick={(e) => handleEdit(e, customer)}
                         className="h-8 w-8 p-0"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -327,7 +263,7 @@ const CustomersPage: React.FC = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleConfirmDelete(customer)} 
+                        onClick={(e) => handleConfirmDelete(e, customer)} 
                         className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -341,7 +277,6 @@ const CustomersPage: React.FC = () => {
         </Card>
       )}
 
-      {/* All dialogs remain the same */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -415,74 +350,7 @@ const CustomersPage: React.FC = () => {
           </form>
         </DialogContent>
       </Dialog>
-      
-      {/* Customer Detail Dialog */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              Customer Details
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            {selectedCustomer && (
-              <>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Name</h3>
-                    <p className="font-semibold">{selectedCustomer.name}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Phone</h3>
-                    <p>{selectedCustomer.phone}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Address</h3>
-                    <p>{selectedCustomer.address || 'Not provided'}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">NIC Number</h3>
-                    <p>{selectedCustomer.nic_number || 'Not provided'}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Balance</h3>
-                    <p className="font-bold text-primary">
-                      {new Intl.NumberFormat('en-US', { 
-                        style: 'currency', 
-                        currency: 'PKR',
-                        currencyDisplay: 'narrowSymbol'
-                      }).format(calculateCustomerBalance(selectedCustomer.id))}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <HistoryTimeline history={selectedCustomer.history} limit={3} />
-                  
-                  {selectedCustomer.history.length > 3 && (
-                    <Button 
-                      variant="link" 
-                      onClick={() => {
-                        setIsDetailOpen(false);
-                        setTimeout(() => setIsHistoryOpen(true), 100);
-                      }}
-                      className="mt-2 p-0 h-auto"
-                    >
-                      View complete history
-                    </Button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete Confirmation Dialog */}
+
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -522,16 +390,6 @@ const CustomersPage: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* History Dialog */}
-      {selectedCustomer && (
-        <HistoryDialog
-          isOpen={isHistoryOpen}
-          setIsOpen={setIsHistoryOpen}
-          history={selectedCustomer.history}
-          title={`Customer: ${selectedCustomer.name}`}
-        />
-      )}
     </div>
   );
 };

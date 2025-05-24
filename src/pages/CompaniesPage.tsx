@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,21 +8,19 @@ import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit2, Plus, Trash2, Search, Eye } from 'lucide-react';
+import { Edit2, Plus, Trash2, Search } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import HistoryDialog from '@/components/history/HistoryDialog';
 import { Company } from '@/context/AppContext';
 
 const CompaniesPage: React.FC = () => {
+  const navigate = useNavigate();
   const { state, dispatch, generateId, calculateCompanyBalance } = useApp();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [companies, setCompanies] = useState(state.companies);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   
   // Form state
@@ -70,17 +68,17 @@ const CompaniesPage: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleViewCompany = (company: Company) => {
-    setSelectedCompany(company);
-    setIsDetailOpen(true);
+  const handleRowClick = (company: Company) => {
+    navigate(`/companies/${company.id}`);
   };
 
-  const handleViewHistory = (company: Company) => {
-    setSelectedCompany(company);
-    setIsHistoryOpen(true);
+  const handleEdit = (e: React.MouseEvent, company: Company) => {
+    e.stopPropagation();
+    handleOpenForm(company);
   };
 
-  const handleConfirmDelete = (company: Company) => {
+  const handleConfirmDelete = (e: React.MouseEvent, company: Company) => {
+    e.stopPropagation();
     setSelectedCompany(company);
     setIsDeleteDialogOpen(true);
   };
@@ -228,7 +226,11 @@ const CompaniesPage: React.FC = () => {
             </TableHeader>
             <TableBody>
               {companies.map((company) => (
-                <TableRow key={company.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow 
+                  key={company.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleRowClick(company)}
+                >
                   <TableCell className="font-medium">{company.name}</TableCell>
                   <TableCell>{company.contact_number}</TableCell>
                   <TableCell>{company.address || 'Not provided'}</TableCell>
@@ -244,15 +246,7 @@ const CompaniesPage: React.FC = () => {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleViewCompany(company)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleOpenForm(company)}
+                        onClick={(e) => handleEdit(e, company)}
                         className="h-8 w-8 p-0"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -260,7 +254,7 @@ const CompaniesPage: React.FC = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleConfirmDelete(company)} 
+                        onClick={(e) => handleConfirmDelete(e, company)} 
                         className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -339,61 +333,6 @@ const CompaniesPage: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Company Detail Dialog */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Company Details</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            {selectedCompany && (
-              <>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Name</h3>
-                    <p className="font-semibold">{selectedCompany.name}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Contact Number</h3>
-                    <p>{selectedCompany.contact_number}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Address</h3>
-                    <p>{selectedCompany.address || 'Not provided'}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Balance</h3>
-                    <p className="font-bold text-primary">
-                      {new Intl.NumberFormat('en-US', { 
-                        style: 'currency', 
-                        currency: 'PKR',
-                        currencyDisplay: 'narrowSymbol'
-                      }).format(calculateCompanyBalance(selectedCompany.id))}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setIsDetailOpen(false);
-                      setTimeout(() => setIsHistoryOpen(true), 100);
-                    }}
-                    className="w-full"
-                  >
-                    View Transaction History
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-      
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -434,16 +373,6 @@ const CompaniesPage: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* History Dialog */}
-      {selectedCompany && (
-        <HistoryDialog
-          isOpen={isHistoryOpen}
-          setIsOpen={setIsHistoryOpen}
-          history={selectedCompany.history}
-          title={`Company: ${selectedCompany.name}`}
-        />
-      )}
     </div>
   );
 };

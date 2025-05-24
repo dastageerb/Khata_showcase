@@ -51,9 +51,10 @@ export interface Transaction {
   quantity: number;
   payment_mode: string;
   bill_id: string;
-  purchase_description: string;
+  purchase_description?: string;
   additional_notes?: string;
   amount: number;
+  type: 'credit' | 'debit';
   created_by: string;
   created_at: Date;
   updated_at: Date;
@@ -154,15 +155,7 @@ const initialState: AppState = {
       updated_at: new Date(),
       created_by: "system",
       updated_by: "system",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "system",
-          user_name: "System",
-          changes: "Initial admin user creation"
-        }
-      ]
+      history: []
     }
   ],
   customers: [
@@ -177,15 +170,7 @@ const initialState: AppState = {
       updated_at: new Date(),
       created_by: "admin-001",
       updated_by: "admin-001",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Customer profile created"
-        }
-      ]
+      history: []
     }
   ],
   companies: [
@@ -199,15 +184,7 @@ const initialState: AppState = {
       updated_at: new Date(),
       created_by: "admin-001",
       updated_by: "admin-001",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Company profile created"
-        }
-      ]
+      history: []
     }
   ],
   customerTransactions: [
@@ -221,25 +198,12 @@ const initialState: AppState = {
       purchase_description: "Sample purchase",
       additional_notes: "Sample notes",
       amount: 1500.00,
+      type: "credit",
       created_by: "admin-001",
       created_at: new Date(),
       updated_at: new Date(),
       updated_by: "admin-001",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Transaction recorded",
-          old_values: null,
-          new_values: {
-            amount: 1500.00,
-            payment_mode: "Cash",
-            quantity: 5
-          }
-        }
-      ]
+      history: []
     }
   ],
   companyTransactions: [
@@ -253,25 +217,12 @@ const initialState: AppState = {
       purchase_description: "Sample company transaction",
       additional_notes: "Sample company notes",
       amount: 2500.00,
+      type: "debit",
       created_by: "admin-001",
       created_at: new Date(),
       updated_at: new Date(),
       updated_by: "admin-001",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Company transaction recorded",
-          old_values: null,
-          new_values: {
-            amount: 2500.00,
-            payment_mode: "Bank Transfer",
-            quantity: 10
-          }
-        }
-      ]
+      history: []
     }
   ],
   bills: [
@@ -287,21 +238,7 @@ const initialState: AppState = {
       updated_at: new Date(),
       updated_by: "admin-001",
       status: "completed",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Bill generated",
-          old_values: null,
-          new_values: {
-            total_amount: 1500.00,
-            customer_name: "Sample Customer",
-            serial_no: "AMR-8001"
-          }
-        }
-      ]
+      history: []
     }
   ],
   billItems: [
@@ -316,22 +253,7 @@ const initialState: AppState = {
       updated_at: new Date(),
       created_by: "admin-001",
       updated_by: "admin-001",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Bill item added",
-          old_values: null,
-          new_values: {
-            product_name: "Radiator Core",
-            quantity: 2,
-            price: 750.00,
-            amount: 1500.00
-          }
-        }
-      ]
+      history: []
     }
   ],
   products: [
@@ -344,15 +266,7 @@ const initialState: AppState = {
       updated_at: new Date(),
       created_by: "admin-001",
       updated_by: "admin-001",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Product added to catalog"
-        }
-      ]
+      history: []
     },
     {
       id: "prod-002",
@@ -363,15 +277,7 @@ const initialState: AppState = {
       updated_at: new Date(),
       created_by: "admin-001",
       updated_by: "admin-001",
-      history: [
-        {
-          action: "created",
-          timestamp: new Date(),
-          user_id: "admin-001",
-          user_name: "Administrator",
-          changes: "Product added to catalog"
-        }
-      ]
+      history: []
     }
   ],
   settings: {
@@ -384,15 +290,7 @@ const initialState: AppState = {
     updated_at: new Date(),
     created_by: "system",
     updated_by: "admin-001",
-    history: [
-      {
-        action: "created",
-        timestamp: new Date(),
-        user_id: "system",
-        user_name: "System",
-        changes: "Initial settings configuration"
-      }
-    ]
+    history: []
   },
   isLoading: false
 };
@@ -512,13 +410,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const calculateCustomerBalance = (customerId: string): number => {
     return state.customerTransactions
       .filter(t => t.customer_id === customerId)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + (t.type === 'credit' ? t.amount : -t.amount), 0);
   };
 
   const calculateCompanyBalance = (companyId: string): number => {
     return state.companyTransactions
       .filter(t => t.company_id === companyId)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .reduce((sum, t) => sum + (t.type === 'credit' ? t.amount : -t.amount), 0);
   };
 
   return (
