@@ -50,38 +50,40 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-xl font-bold text-primary">
-              {state.settings.shop_name}
-            </h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <User className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">{state.currentUser?.name}</span>
-            </div>
-            <Button variant="outline" onClick={handleLogout} size="sm">
-              <LogOut className="w-3.5 h-3.5 mr-1" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="animate-fade-in">
-          {renderContent()}
-        </div>
-      </main>
-      
+    <div className="min-h-screen bg-gray-50 flex">
       <FloatingNavigation 
         currentPath={currentPath}
         onNavigate={setCurrentPath}
       />
+      
+      <div className="flex-1 ml-16">
+        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-xl font-bold text-primary">
+                {state.settings.shop_name}
+              </h1>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">{state.currentUser?.name}</span>
+              </div>
+              <Button variant="outline" onClick={handleLogout} size="sm">
+                <LogOut className="w-3.5 h-3.5 mr-1" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </header>
+        
+        <main className="container mx-auto px-4 py-8">
+          <div className="animate-fade-in">
+            {renderContent()}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

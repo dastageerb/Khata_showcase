@@ -72,9 +72,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
             className="cursor-pointer select-none transition-all duration-300 hover:scale-105"
           >
             <h1 className="text-3xl font-bold text-primary animate-pulse-glow">
-              Al Mehran Radiator
+              Financial Management Portal
             </h1>
-            <p className="text-sm text-gray-500 mt-2">Financial Management Portal</p>
+            <p className="text-sm text-gray-500 mt-2">Al Mehran Radiator</p>
           </div>
           {titleClickCount > 0 && titleClickCount < 5 && (
             <div className="flex justify-center space-x-1">
@@ -91,29 +91,31 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@admin.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="transition-all duration-300 focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="admin"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="transition-all duration-300 focus:ring-2 focus:ring-primary"
-              />
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@admin.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="transition-all duration-300 focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="admin"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="transition-all duration-300 focus:ring-2 focus:ring-primary"
+                />
+              </div>
             </div>
             <Button 
               type="submit" 
@@ -132,9 +134,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
           </form>
           
           <div className="text-center text-sm text-gray-500">
-            <p>Demo Credentials:</p>
-            <p className="font-mono">admin@admin.com / admin</p>
-            <p className="mt-2 text-xs">💡 Tip: Tap the title 5 times for signup!</p>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <p className="font-medium">Email:</p>
+                <p className="font-mono text-xs">admin@admin.com</p>
+              </div>
+              <div>
+                <p className="font-medium">Password:</p>
+                <p className="font-mono text-xs">admin</p>
+              </div>
+            </div>
+            <p className="text-xs">💡 Tip: Tap the title 5 times for signup!</p>
           </div>
         </CardContent>
       </Card>
