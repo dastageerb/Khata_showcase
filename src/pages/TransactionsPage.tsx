@@ -1,0 +1,487 @@
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useApp } from '@/context/AppContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon, Download, Search, SlidersHorizontal } from 'lucide-react';
+import HistoryDialog from '@/components/history/HistoryDialog';
+import { Transaction } from '@/context/AppContext';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
+const TransactionsPage: React.FC = () => {
+  const { state } = useApp();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
+    from: undefined,
+    to: undefined
+  });
+  const [paymentModeFilter, setPaymentModeFilter] = useState('');
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  
+  useEffect(() => {
+    // Combine customer and company transactions
+    let allTransactions: Transaction[] = [];
+    
+    if (activeTab === 'all' || activeTab === 'customer') {
+      allTransactions = [...allTransactions, ...state.customerTransactions];
+    }
+    
+    if (activeTab === 'all' || activeTab === 'company') {
+      allTransactions = [...allTransactions, ...state.companyTransactions];
+    }
+    
+    // Apply filters
+    let filteredTransactions = allTransactions;
+    
+    // Search filter
+    if (searchQuery) {
+      filteredTransactions = filteredTransactions.filter(transaction => {
+        // Check description
+        const matchesDescription = transaction.purchase_description
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        
+        // Check bill id
+        const matchesBillId = transaction.bill_id
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+          
+        // Check amount (convert to string for search)
+        const matchesAmount = transaction.amount.toString().includes(searchQuery);
+        
+        // Check customer or company name
+        let entityName = '';
+        if ('customer_id' in transaction) {
+          const customer = state.customers.find(c => c.id === transaction.customer_id);
+          entityName = customer?.name || '';
+        } else if ('company_id' in transaction) {
+          const company = state.companies.find(c => c.id === transaction.company_id);
+          entityName = company?.name || '';
+        }
+        
+        const matchesEntityName = entityName.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        return matchesDescription || matchesBillId || matchesAmount || matchesEntityName;
+      });
+    }
+    
+    // Date filter
+    if (dateFilter.from || dateFilter.to) {
+      filteredTransactions = filteredTransactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        
+        if (dateFilter.from && dateFilter.to) {
+          return transactionDate >= dateFilter.from && transactionDate <= dateFilter.to;
+        } else if (dateFilter.from) {
+          return transactionDate >= dateFilter.from;
+        } else if (dateFilter.to) {
+          return transactionDate <= dateFilter.to;
+        }
+        
+        return true;
+      });
+    }
+    
+    // Payment mode filter
+    if (paymentModeFilter) {
+      filteredTransactions = filteredTransactions.filter(transaction => 
+        transaction.payment_mode === paymentModeFilter
+      );
+    }
+    
+    // Sort by latest date
+    filteredTransactions.sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    
+    setTransactions(filteredTransactions);
+  }, [
+    activeTab,
+    searchQuery,
+    dateFilter.from,
+    dateFilter.to,
+    paymentModeFilter,
+    state.customerTransactions,
+    state.companyTransactions,
+    state.customers,
+    state.companies
+  ]);
+
+  const handleClearFilters = () => {
+    setDateFilter({ from: undefined, to: undefined });
+    setPaymentModeFilter('');
+  };
+
+  const handleExportData = () => {
+    // Simulate exporting data as CSV
+    const csvHeader = 'Date,Entity,Description,Amount,Payment Mode,Bill ID\n';
+    
+    const csvRows = transactions.map(transaction => {
+      let entityName = '';
+      let entityType = '';
+      
+      if ('customer_id' in transaction) {
+        const customer = state.customers.find(c => c.id === transaction.customer_id);
+        entityName = customer?.name || 'Unknown Customer';
+        entityType = 'Customer';
+      } else if ('company_id' in transaction) {
+        const company = state.companies.find(c => c.id === transaction.company_id);
+        entityName = company?.name || 'Unknown Company';
+        entityType = 'Company';
+      }
+      
+      const date = format(new Date(transaction.date), 'yyyy-MM-dd');
+      const description = transaction.purchase_description.replace(/,/g, ';'); // Replace commas to avoid CSV issues
+      const amount = transaction.amount;
+      const paymentMode = transaction.payment_mode;
+      const billId = transaction.bill_id;
+      
+      return `${date},"${entityName} (${entityType})","${description}",${amount},"${paymentMode}","${billId}"`;
+    }).join('\n');
+    
+    const csvContent = csvHeader + csvRows;
+    
+    // In a real app, we would create a download link
+    // For this prototype, we'll just show a toast notification
+    console.log('CSV Export:', csvContent);
+    
+    toast({
+      title: "Export Simulated",
+      description: `${transactions.length} transactions exported (see console for data)`,
+    });
+  };
+
+  const getEntityName = (transaction: Transaction): string => {
+    if ('customer_id' in transaction) {
+      const customer = state.customers.find(c => c.id === transaction.customer_id);
+      return customer?.name || 'Unknown Customer';
+    } else if ('company_id' in transaction) {
+      const company = state.companies.find(c => c.id === transaction.company_id);
+      return company?.name || 'Unknown Company';
+    }
+    return 'Unknown Entity';
+  };
+
+  const getEntityType = (transaction: Transaction): string => {
+    if ('customer_id' in transaction) {
+      return 'Customer';
+    } else if ('company_id' in transaction) {
+      return 'Company';
+    }
+    return 'Unknown';
+  };
+
+  const viewTransactionHistory = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsHistoryOpen(true);
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Transactions</h1>
+          <p className="text-gray-500">View and manage all financial transactions</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search transactions"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-full sm:w-[250px]"
+            />
+          </div>
+          
+          <Button onClick={() => setIsFilterDialogOpen(true)} variant="outline">
+            <SlidersHorizontal className="h-4 w-4 mr-2" />
+            Filters
+            {(dateFilter.from || dateFilter.to || paymentModeFilter) && (
+              <span className="ml-2 bg-primary w-2 h-2 rounded-full" />
+            )}
+          </Button>
+          
+          <Button onClick={handleExportData} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+        </div>
+      </div>
+      
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-4 w-full sm:w-auto">
+          <TabsTrigger value="all">All Transactions</TabsTrigger>
+          <TabsTrigger value="customer">Customer</TabsTrigger>
+          <TabsTrigger value="company">Company</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="all" className="mt-0">
+          <TransactionsList 
+            transactions={transactions} 
+            getEntityName={getEntityName}
+            getEntityType={getEntityType}
+            viewTransactionHistory={viewTransactionHistory}
+          />
+        </TabsContent>
+        
+        <TabsContent value="customer" className="mt-0">
+          <TransactionsList 
+            transactions={transactions} 
+            getEntityName={getEntityName}
+            getEntityType={getEntityType}
+            viewTransactionHistory={viewTransactionHistory}
+          />
+        </TabsContent>
+        
+        <TabsContent value="company" className="mt-0">
+          <TransactionsList 
+            transactions={transactions} 
+            getEntityName={getEntityName}
+            getEntityType={getEntityType}
+            viewTransactionHistory={viewTransactionHistory}
+          />
+        </TabsContent>
+      </Tabs>
+      
+      {/* Filter Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter Transactions</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label>Date Range</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="from-date" className="text-xs">From</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        id="from-date"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dateFilter.from && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateFilter.from ? format(dateFilter.from, "PP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateFilter.from}
+                        onSelect={(date) => setDateFilter(prev => ({ ...prev, from: date }))}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-1">
+                  <Label htmlFor="to-date" className="text-xs">To</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        id="to-date"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !dateFilter.to && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateFilter.to ? format(dateFilter.to, "PP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateFilter.to}
+                        onSelect={(date) => setDateFilter(prev => ({ ...prev, to: date }))}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="payment-mode">Payment Mode</Label>
+              <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
+                <SelectTrigger id="payment-mode">
+                  <SelectValue placeholder="All Payment Modes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Payment Modes</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
+                  <SelectItem value="Check">Check</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex justify-between pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClearFilters}
+              >
+                Clear Filters
+              </Button>
+              
+              <Button
+                type="button"
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => setIsFilterDialogOpen(false)}
+              >
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* History Dialog */}
+      {selectedTransaction && (
+        <HistoryDialog
+          isOpen={isHistoryOpen}
+          setIsOpen={setIsHistoryOpen}
+          history={selectedTransaction.history}
+          title={`Transaction: ${selectedTransaction.purchase_description}`}
+        />
+      )}
+    </div>
+  );
+};
+
+// Helper component for transaction list
+interface TransactionsListProps {
+  transactions: Transaction[];
+  getEntityName: (transaction: Transaction) => string;
+  getEntityType: (transaction: Transaction) => string;
+  viewTransactionHistory: (transaction: Transaction) => void;
+}
+
+const TransactionsList: React.FC<TransactionsListProps> = ({ 
+  transactions, 
+  getEntityName, 
+  getEntityType,
+  viewTransactionHistory
+}) => {
+  if (transactions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <p className="text-xl font-medium text-gray-400 mb-4">No transactions found</p>
+          <p className="text-gray-500">Try adjusting your filters or search criteria</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <div className="space-y-4">
+      {transactions.map((transaction) => {
+        const entityName = getEntityName(transaction);
+        const entityType = getEntityType(transaction);
+        
+        return (
+          <Card key={transaction.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-0">
+              <div className="flex flex-col md:flex-row border-b">
+                <div className="p-4 md:w-2/3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium">{entityName}</h3>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {entityType}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {format(new Date(transaction.date), 'MMM d, yyyy')}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="font-medium">{transaction.purchase_description}</p>
+                    {transaction.additional_notes && (
+                      <p className="text-sm text-gray-500 mt-1">{transaction.additional_notes}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="p-4 md:w-1/3 md:border-l flex flex-col justify-center space-y-2 bg-gray-50">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Amount:</span>
+                    <span className="font-bold text-lg text-primary">
+                      {new Intl.NumberFormat('en-US', { 
+                        style: 'currency', 
+                        currency: 'PKR',
+                        currencyDisplay: 'narrowSymbol'
+                      }).format(transaction.amount)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Qty:</span>
+                    <span>{transaction.quantity}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Payment:</span>
+                    <span>{transaction.payment_mode}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Bill ID:</span>
+                    <span>{transaction.bill_id}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-4 flex justify-end">
+                <Button 
+                  variant="link" 
+                  onClick={() => viewTransactionHistory(transaction)}
+                  className="text-sm"
+                >
+                  View History
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
+
+export default TransactionsPage;
