@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import { Combobox } from '@/components/ui/combobox';
 
 const Homepage: React.FC = () => {
   const { state, dispatch, generateId, addHistoryEntry } = useApp();
@@ -26,22 +27,20 @@ const Homepage: React.FC = () => {
     type: 'credit' as 'credit' | 'debit'
   });
 
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  // Get suggestions based on entity type
-  const suggestions = useMemo(() => {
+  // Get options for entity dropdown
+  const entityOptions = useMemo(() => {
     if (formData.entity_type === 'customer') {
-      return state.customerTransactions
-        .map(t => t.customer_id)
-        .filter((id, index, self) => self.indexOf(id) === index && id.toLowerCase().includes(formData.entity_name.toLowerCase()))
-        .slice(0, 5);
+      return state.customers.map(customer => ({
+        value: customer.id,
+        label: customer.name
+      }));
     } else {
-      return state.companyTransactions
-        .map(t => t.company_id)
-        .filter((id, index, self) => self.indexOf(id) === index && id.toLowerCase().includes(formData.entity_name.toLowerCase()))
-        .slice(0, 5);
+      return state.companies.map(company => ({
+        value: company.id,
+        label: company.name
+      }));
     }
-  }, [formData.entity_type, formData.entity_name, state.customerTransactions, state.companyTransactions]);
+  }, [formData.entity_type, state.customers, state.companies]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,78 +137,62 @@ const Homepage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Add New Transaction</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-bold text-center">Add New Transaction</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Entity Type Selection */}
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                type="button"
-                variant={formData.entity_type === 'customer' ? 'default' : 'outline'}
-                onClick={() => setFormData({...formData, entity_type: 'customer', entity_name: ''})}
-                className="h-16 text-lg"
-              >
-                Customer Transaction
-              </Button>
-              <Button
-                type="button"
-                variant={formData.entity_type === 'company' ? 'default' : 'outline'}
-                onClick={() => setFormData({...formData, entity_type: 'company', entity_name: ''})}
-                className="h-16 text-lg"
-              >
-                Company Transaction
-              </Button>
-            </div>
-
-            {/* Entity Name with Autocomplete */}
-            <div className="relative">
-              <Label htmlFor="entity_name">
-                {formData.entity_type === 'customer' ? 'Customer Name' : 'Company Name'}
-              </Label>
-              <Input
-                id="entity_name"
-                value={formData.entity_name}
-                onChange={(e) => {
-                  setFormData({...formData, entity_name: e.target.value});
-                  setShowSuggestions(e.target.value.length > 0);
-                }}
-                onFocus={() => setShowSuggestions(formData.entity_name.length > 0)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder={`Enter ${formData.entity_type} name`}
-                required
-                className="text-lg h-12"
-              />
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                  {suggestions.map((suggestion, index) => (
-                    <div
-                      key={index}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        setFormData({...formData, entity_name: suggestion});
-                        setShowSuggestions(false);
-                      }}
-                    >
-                      {suggestion}
-                    </div>
-                  ))}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Entity Type Tabs */}
+            <Tabs value={formData.entity_type} onValueChange={(value: 'customer' | 'company') => setFormData({...formData, entity_type: value, entity_name: ''})}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="customer">Customer Transaction</TabsTrigger>
+                <TabsTrigger value="company">Company Transaction</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="customer" className="mt-4">
+                <div className="space-y-4">
+                  {/* Entity Selection */}
+                  <div>
+                    <Label className="text-sm">Customer Name</Label>
+                    <Combobox
+                      options={entityOptions}
+                      value={formData.entity_name}
+                      onValueChange={(value) => setFormData({...formData, entity_name: value})}
+                      placeholder="Select or search customer"
+                      className="h-9"
+                    />
+                  </div>
                 </div>
-              )}
-            </div>
+              </TabsContent>
+              
+              <TabsContent value="company" className="mt-4">
+                <div className="space-y-4">
+                  {/* Entity Selection */}
+                  <div>
+                    <Label className="text-sm">Company Name</Label>
+                    <Combobox
+                      options={entityOptions}
+                      value={formData.entity_name}
+                      onValueChange={(value) => setFormData({...formData, entity_name: value})}
+                      placeholder="Select or search company"
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
 
             {/* Transaction Type */}
             <div className="flex items-center justify-center space-x-4">
-              <Label className="text-lg">Transaction Type:</Label>
+              <Label className="text-sm">Type:</Label>
               <div className="flex items-center space-x-2">
                 <Button
                   type="button"
                   variant={formData.type === 'credit' ? 'default' : 'outline'}
                   onClick={() => setFormData({...formData, type: 'credit'})}
-                  className={`h-12 px-6 ${formData.type === 'credit' ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-600 hover:bg-green-50'}`}
+                  className={`h-9 px-4 text-sm ${formData.type === 'credit' ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-600 hover:bg-green-50'}`}
                 >
                   Credit (+)
                 </Button>
@@ -217,7 +200,7 @@ const Homepage: React.FC = () => {
                   type="button"
                   variant={formData.type === 'debit' ? 'default' : 'outline'}
                   onClick={() => setFormData({...formData, type: 'debit'})}
-                  className={`h-12 px-6 ${formData.type === 'debit' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-600 hover:bg-red-50'}`}
+                  className={`h-9 px-4 text-sm ${formData.type === 'debit' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-600 hover:bg-red-50'}`}
                 >
                   Debit (-)
                 </Button>
@@ -227,7 +210,7 @@ const Homepage: React.FC = () => {
             {/* Amount and Date */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="amount" className="text-lg">Amount</Label>
+                <Label htmlFor="amount" className="text-sm">Amount</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -235,18 +218,18 @@ const Homepage: React.FC = () => {
                   value={formData.amount}
                   onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
                   required
-                  className="text-lg h-12"
+                  className="h-9 text-sm"
                 />
               </div>
               <div>
-                <Label htmlFor="date" className="text-lg">Date</Label>
+                <Label htmlFor="date" className="text-sm">Date</Label>
                 <Input
                   id="date"
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData({...formData, date: e.target.value})}
                   required
-                  className="text-lg h-12"
+                  className="h-9 text-sm"
                 />
               </div>
             </div>
@@ -254,9 +237,9 @@ const Homepage: React.FC = () => {
             {/* Payment Mode and Quantity */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="payment_mode" className="text-lg">Payment Mode</Label>
+                <Label htmlFor="payment_mode" className="text-sm">Payment Mode</Label>
                 <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
-                  <SelectTrigger className="h-12 text-lg">
+                  <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
                   <SelectContent>
@@ -268,54 +251,54 @@ const Homepage: React.FC = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="quantity" className="text-lg">Quantity</Label>
+                <Label htmlFor="quantity" className="text-sm">Quantity</Label>
                 <Input
                   id="quantity"
                   type="number"
                   value={formData.quantity}
                   onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
-                  className="text-lg h-12"
+                  className="h-9 text-sm"
                 />
               </div>
             </div>
 
-            {/* Bill ID */}
-            <div>
-              <Label htmlFor="bill_id" className="text-lg">Bill ID (Optional)</Label>
-              <Input
-                id="bill_id"
-                value={formData.bill_id}
-                onChange={(e) => setFormData({...formData, bill_id: e.target.value})}
-                placeholder="Enter bill ID or leave empty for auto-generation"
-                className="text-lg h-12"
-              />
-            </div>
-
-            {/* Purchase Description */}
-            <div>
-              <Label htmlFor="description" className="text-lg">Purchase Description (Optional)</Label>
-              <Input
-                id="description"
-                value={formData.purchase_description}
-                onChange={(e) => setFormData({...formData, purchase_description: e.target.value})}
-                placeholder="Enter description"
-                className="text-lg h-12"
-              />
+            {/* Bill ID and Purchase Description */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="bill_id" className="text-sm">Bill ID (Optional)</Label>
+                <Input
+                  id="bill_id"
+                  value={formData.bill_id}
+                  onChange={(e) => setFormData({...formData, bill_id: e.target.value})}
+                  placeholder="Enter bill ID"
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description" className="text-sm">Purchase Description</Label>
+                <Input
+                  id="description"
+                  value={formData.purchase_description}
+                  onChange={(e) => setFormData({...formData, purchase_description: e.target.value})}
+                  placeholder="Enter description"
+                  className="h-9 text-sm"
+                />
+              </div>
             </div>
 
             {/* Additional Notes */}
             <div>
-              <Label htmlFor="notes" className="text-lg">Additional Notes (Optional)</Label>
+              <Label htmlFor="notes" className="text-sm">Additional Notes (Optional)</Label>
               <Input
                 id="notes"
                 value={formData.additional_notes}
                 onChange={(e) => setFormData({...formData, additional_notes: e.target.value})}
                 placeholder="Enter additional notes"
-                className="text-lg h-12"
+                className="h-9 text-sm"
               />
             </div>
 
-            <Button type="submit" className="w-full h-14 text-lg" disabled={state.isLoading}>
+            <Button type="submit" className="w-full h-10 text-sm" disabled={state.isLoading}>
               {state.isLoading ? 'Adding Transaction...' : 'Add Transaction'}
             </Button>
           </form>
