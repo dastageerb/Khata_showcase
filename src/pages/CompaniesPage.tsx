@@ -187,7 +187,7 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
             </div>
           )}
         </CardContent>
-      </Dialog>
+      </Card>
 
       {/* Company Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
