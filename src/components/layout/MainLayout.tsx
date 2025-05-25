@@ -7,7 +7,7 @@ import { LogOut, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Import all page components
-import HomePage from '@/pages/HomePage';
+import Homepage from '@/pages/Homepage';
 import CustomersPage from '@/pages/CustomersPage';
 import CompaniesPage from '@/pages/CompaniesPage';
 import TransactionsPage from '@/pages/TransactionsPage';
@@ -48,7 +48,7 @@ const MainLayout: React.FC = () => {
     
     switch (currentPath) {
       case '/':
-        return <HomePage />;
+        return <Homepage />;
       case '/customers':
         return <CustomersPage onNavigate={handleNavigate} />;
       case '/companies':
@@ -62,7 +62,7 @@ const MainLayout: React.FC = () => {
       case '/settings':
         return <SettingsPage />;
       default:
-        return <HomePage />;
+        return <Homepage />;
     }
   };
 
