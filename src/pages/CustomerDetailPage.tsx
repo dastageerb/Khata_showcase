@@ -122,33 +122,33 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
       </div>
 
       {/* Profile Section - Fixed at top */}
-      <div className="bg-white rounded-lg shadow-sm border p-6 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
         <div className="flex items-center space-x-4">
           {/* Profile Circle */}
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-            <User className="w-8 h-8 text-white" />
+          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+            <User className="w-6 h-6 text-white" />
           </div>
           
           {/* Customer Info */}
-          <div className="flex-1">
-            <h2 className="text-xl font-bold">{customer.name}</h2>
-            <div className="grid grid-cols-2 gap-4 mt-2 text-sm text-gray-600">
-              <div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold truncate">{customer.name}</h2>
+            <div className="grid grid-cols-2 gap-2 mt-1 text-xs text-gray-600">
+              <div className="truncate">
                 <span className="font-medium">Phone:</span> {customer.phone}
               </div>
-              <div>
+              <div className="truncate">
                 <span className="font-medium">NIC:</span> {customer.nic_number || 'Not provided'}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-2 truncate">
                 <span className="font-medium">Address:</span> {customer.address || 'Not provided'}
               </div>
             </div>
           </div>
 
           {/* Balance Info */}
-          <div className="text-right">
-            <div className="text-sm text-gray-500 mb-1">Current Balance</div>
-            <div className={`text-2xl font-bold ${
+          <div className="text-right flex-shrink-0">
+            <div className="text-xs text-gray-500 mb-1">Balance</div>
+            <div className={`text-lg font-bold ${
               balance >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
               {new Intl.NumberFormat('en-US', { 
@@ -160,10 +160,10 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
             <Button 
               onClick={() => setIsTransactionFormOpen(true)}
               size="sm"
-              className="mt-2"
+              className="mt-1"
             >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Transaction
+              <Plus className="h-3 w-3 mr-1" />
+              Add
             </Button>
           </div>
         </div>
@@ -184,13 +184,15 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="sticky top-0 bg-white">Date</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Type</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Description</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Payment Mode</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Amount</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Bill ID</TableHead>
-                    <TableHead className="sticky top-0 bg-white">Created</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-24">Date</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-16">Type</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-32">Description</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-24">Payment</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-20">Qty</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-24">Amount</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-24">Bill ID</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-24">Created</TableHead>
+                    <TableHead className="sticky top-0 bg-white min-w-32">Notes</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -205,13 +207,16 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                             ? 'bg-green-100 text-green-700' 
                             : 'bg-red-100 text-red-700'
                         }`}>
-                          {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
+                          {transaction.type === 'credit' ? '+' : '-'}
                         </span>
                       </TableCell>
-                      <TableCell className="max-w-xs">
-                        <div className="truncate">{transaction.purchase_description || 'No description'}</div>
+                      <TableCell className="max-w-32">
+                        <div className="truncate" title={transaction.purchase_description || 'No description'}>
+                          {transaction.purchase_description || 'No description'}
+                        </div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap">{transaction.payment_mode}</TableCell>
+                      <TableCell className="text-center">{transaction.quantity}</TableCell>
                       <TableCell className={`font-bold whitespace-nowrap ${
                         transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                       }`}>
@@ -224,6 +229,11 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                       <TableCell className="whitespace-nowrap">{transaction.bill_id}</TableCell>
                       <TableCell className="whitespace-nowrap text-sm text-gray-500">
                         {format(new Date(transaction.created_at), 'MMM d, yyyy')}
+                      </TableCell>
+                      <TableCell className="max-w-32">
+                        <div className="truncate" title={transaction.additional_notes || 'No notes'}>
+                          {transaction.additional_notes || 'No notes'}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -291,6 +301,16 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                   <SelectItem value="Check">Check</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="bill_id">Bill ID (Optional)</Label>
+              <Input
+                id="bill_id"
+                value={formData.bill_id}
+                onChange={(e) => setFormData({...formData, bill_id: e.target.value})}
+                placeholder="Enter bill ID"
+              />
             </div>
 
             <div>

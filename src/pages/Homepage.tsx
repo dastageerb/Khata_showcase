@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -127,28 +128,47 @@ const Homepage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="flex items-center space-x-2">
-                <Button
-                  type="button"
-                  variant={formData.entity_type === 'customer' ? 'default' : 'outline'}
-                  onClick={() => setFormData({...formData, entity_type: 'customer'})}
-                  className="h-8"
-                >
-                  Customer
-                </Button>
-                <Button
-                  type="button"
-                  variant={formData.entity_type === 'company' ? 'default' : 'outline'}
-                  onClick={() => setFormData({...formData, entity_type: 'company'})}
-                  className="h-8"
-                >
-                  Company
-                </Button>
-              </div>
-            </div>
+            {/* Entity Type Tabs */}
+            <Tabs 
+              value={formData.entity_type} 
+              onValueChange={(value: 'customer' | 'company') => setFormData({...formData, entity_type: value})}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="customer">Customer</TabsTrigger>
+                <TabsTrigger value="company">Company</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="customer" className="space-y-4 mt-6">
+                <div>
+                  <Label htmlFor="customer_name">Customer Name</Label>
+                  <Input
+                    id="customer_name"
+                    value={formData.entity_name}
+                    onChange={(e) => setFormData({...formData, entity_name: e.target.value})}
+                    placeholder="Enter customer name"
+                    required
+                  />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="company" className="space-y-4 mt-6">
+                <div>
+                  <Label htmlFor="company_name">Company Name</Label>
+                  <Input
+                    id="company_name"
+                    value={formData.entity_name}
+                    onChange={(e) => setFormData({...formData, entity_name: e.target.value})}
+                    placeholder="Enter company name"
+                    required
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
 
-            <div className="flex items-center space-x-4 mb-4">
+            {/* Transaction Type */}
+            <div className="flex items-center space-x-4">
+              <Label>Transaction Type:</Label>
               <div className="flex items-center space-x-2">
                 <Button
                   type="button"
@@ -169,17 +189,7 @@ const Homepage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="entity_name">{formData.entity_type === 'customer' ? 'Customer' : 'Company'} Name</Label>
-              <Input
-                id="entity_name"
-                value={formData.entity_name}
-                onChange={(e) => setFormData({...formData, entity_name: e.target.value})}
-                placeholder={`Enter ${formData.entity_type} name`}
-                required
-              />
-            </div>
-
+            {/* Amount and Date */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="amount">Amount</Label>
@@ -204,21 +214,45 @@ const Homepage: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="payment_mode">Payment Mode</Label>
-              <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="Check">Check</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Payment Mode and Quantity */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="payment_mode">Payment Mode</Label>
+                <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="Check">Check</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
+                />
+              </div>
             </div>
 
+            {/* Bill ID */}
+            <div>
+              <Label htmlFor="bill_id">Bill ID (Optional)</Label>
+              <Input
+                id="bill_id"
+                value={formData.bill_id}
+                onChange={(e) => setFormData({...formData, bill_id: e.target.value})}
+                placeholder="Enter bill ID or leave empty for auto-generation"
+              />
+            </div>
+
+            {/* Purchase Description */}
             <div>
               <Label htmlFor="description">Purchase Description (Optional)</Label>
               <Input
@@ -226,6 +260,17 @@ const Homepage: React.FC = () => {
                 value={formData.purchase_description}
                 onChange={(e) => setFormData({...formData, purchase_description: e.target.value})}
                 placeholder="Enter description"
+              />
+            </div>
+
+            {/* Additional Notes */}
+            <div>
+              <Label htmlFor="notes">Additional Notes (Optional)</Label>
+              <Input
+                id="notes"
+                value={formData.additional_notes}
+                onChange={(e) => setFormData({...formData, additional_notes: e.target.value})}
+                placeholder="Enter additional notes"
               />
             </div>
 
