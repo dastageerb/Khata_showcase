@@ -56,6 +56,7 @@ const CustomersPage: React.FC<CustomersPageProps> = ({ onNavigate }) => {
         phone: formData.phone,
         address: formData.address,
         nic_number: formData.nic_number,
+        balance: 0,
         created_by: state.currentUser?.id || 'system',
         created_at: new Date(),
         updated_at: new Date(),

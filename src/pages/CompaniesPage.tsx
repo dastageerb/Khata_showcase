@@ -53,6 +53,7 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
         name: formData.name,
         contact_number: formData.contact_number,
         address: formData.address,
+        balance: 0,
         created_by: state.currentUser?.id || 'system',
         created_at: new Date(),
         updated_at: new Date(),
