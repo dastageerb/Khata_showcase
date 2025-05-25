@@ -29,16 +29,16 @@ const FloatingNavigation: React.FC<FloatingNavigationProps> = ({ currentPath, on
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50">
+    <div className="fixed left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-50">
       <div 
         className={`bg-white rounded-2xl shadow-2xl border border-gray-200 transition-all duration-500 ease-in-out ${
-          isExpanded ? 'w-48 p-4' : 'w-16 p-2'
+          isExpanded ? 'w-44 sm:w-48 p-3 sm:p-4' : 'w-14 sm:w-16 p-2'
         }`}
       >
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-1 sm:space-y-2">
           {navigationItems.map((item, index) => {
             const Icon = item.icon;
-            const isActive = currentPath === item.path;
+            const isActive = currentPath === item.path || currentPath.startsWith(item.path + '/');
             
             return (
               <Button
@@ -46,9 +46,10 @@ const FloatingNavigation: React.FC<FloatingNavigationProps> = ({ currentPath, on
                 variant={isActive ? 'default' : 'ghost'}
                 className={`
                   transition-all duration-300 ease-in-out transform hover:scale-105
-                  ${isExpanded ? 'justify-start px-3 py-2' : 'p-3 justify-center'}
+                  ${isExpanded ? 'justify-start px-2 sm:px-3 py-2' : 'p-2 sm:p-3 justify-center'}
                   ${isActive ? 'bg-primary text-white shadow-lg' : 'hover:bg-gray-100'}
-                  ${!isExpanded ? 'w-12 h-12' : 'w-full h-10'}
+                  ${!isExpanded ? 'w-10 h-10 sm:w-12 sm:h-12' : 'w-full h-9 sm:h-10'}
+                  text-xs sm:text-sm
                 `}
                 onClick={() => {
                   onNavigate(item.path);
@@ -58,9 +59,9 @@ const FloatingNavigation: React.FC<FloatingNavigationProps> = ({ currentPath, on
                   animationDelay: `${index * 50}ms`
                 }}
               >
-                <Icon className={`${isExpanded ? 'w-4 h-4 mr-2' : 'w-5 h-5'} transition-all duration-300`} />
+                <Icon className={`${isExpanded ? 'w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2' : 'w-4 h-4 sm:w-5 sm:h-5'} transition-all duration-300`} />
                 {isExpanded && (
-                  <span className="text-sm font-medium whitespace-nowrap animate-fade-in">
+                  <span className="font-medium whitespace-nowrap animate-fade-in text-xs sm:text-sm">
                     {item.label}
                   </span>
                 )}
@@ -69,19 +70,20 @@ const FloatingNavigation: React.FC<FloatingNavigationProps> = ({ currentPath, on
           })}
         </div>
         
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
           <Button
             variant="outline"
             onClick={() => setIsExpanded(!isExpanded)}
             className={`
               transition-all duration-300 transform hover:scale-105
-              ${isExpanded ? 'w-full justify-center' : 'w-12 h-12 p-0 justify-center'}
+              ${isExpanded ? 'w-full justify-center' : 'w-10 h-10 sm:w-12 sm:h-12 p-0 justify-center'}
+              text-xs sm:text-sm
             `}
           >
             <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
               {isExpanded ? '←' : '→'}
             </div>
-            {isExpanded && <span className="ml-2">Collapse</span>}
+            {isExpanded && <span className="ml-1 sm:ml-2 text-xs sm:text-sm">Collapse</span>}
           </Button>
         </div>
       </div>

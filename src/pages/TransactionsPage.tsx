@@ -11,9 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Download, Search, SlidersHorizontal, History } from 'lucide-react';
+import { CalendarIcon, Download, Search, SlidersHorizontal } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import HistoryDialog from '@/components/history/HistoryDialog';
 import { Transaction } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -31,8 +30,6 @@ const TransactionsPage: React.FC = () => {
     to: undefined
   });
   const [paymentModeFilter, setPaymentModeFilter] = useState('');
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
@@ -127,7 +124,7 @@ const TransactionsPage: React.FC = () => {
   };
 
   const handleExportData = () => {
-    const csvHeader = 'Date,Entity,Type,Description,Amount,Payment Mode,Bill ID\n';
+    const csvHeader = 'Date,Entity,Type,Description,Amount,Payment Mode,Bill ID,Created,Updated\n';
     
     const csvRows = transactions.map(transaction => {
       let entityName = '';
@@ -149,8 +146,10 @@ const TransactionsPage: React.FC = () => {
       const paymentMode = transaction.payment_mode;
       const billId = transaction.bill_id;
       const type = transaction.type;
+      const created = format(new Date(transaction.created_at), 'yyyy-MM-dd');
+      const updated = format(new Date(transaction.updated_at), 'yyyy-MM-dd');
       
-      return `${date},"${entityName} (${entityType})","${type}","${description}",${amount},"${paymentMode}","${billId}"`;
+      return `${date},"${entityName} (${entityType})","${type}","${description}",${amount},"${paymentMode}","${billId}","${created}","${updated}"`;
     }).join('\n');
     
     const csvContent = csvHeader + csvRows;
@@ -183,14 +182,9 @@ const TransactionsPage: React.FC = () => {
     return 'Unknown';
   };
 
-  const viewTransactionHistory = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setIsHistoryOpen(true);
-  };
-
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Transactions</h1>
           <p className="text-gray-500">View and manage all financial transactions</p>
@@ -234,7 +228,6 @@ const TransactionsPage: React.FC = () => {
             transactions={transactions} 
             getEntityName={getEntityName}
             getEntityType={getEntityType}
-            viewTransactionHistory={viewTransactionHistory}
           />
         </TabsContent>
         
@@ -243,7 +236,6 @@ const TransactionsPage: React.FC = () => {
             transactions={transactions} 
             getEntityName={getEntityName}
             getEntityType={getEntityType}
-            viewTransactionHistory={viewTransactionHistory}
           />
         </TabsContent>
         
@@ -252,7 +244,6 @@ const TransactionsPage: React.FC = () => {
             transactions={transactions} 
             getEntityName={getEntityName}
             getEntityType={getEntityType}
-            viewTransactionHistory={viewTransactionHistory}
           />
         </TabsContent>
       </Tabs>
@@ -266,7 +257,7 @@ const TransactionsPage: React.FC = () => {
           <div className="space-y-6">
             <div className="space-y-2">
               <Label>Date Range</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label htmlFor="from-date" className="text-xs">From</Label>
                   <Popover>
@@ -361,16 +352,6 @@ const TransactionsPage: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* History Dialog */}
-      {selectedTransaction && (
-        <HistoryDialog
-          isOpen={isHistoryOpen}
-          setIsOpen={setIsHistoryOpen}
-          history={selectedTransaction.history}
-          title={`Transaction: ${selectedTransaction.purchase_description || 'No description'}`}
-        />
-      )}
     </div>
   );
 };
@@ -380,14 +361,12 @@ interface TransactionsListProps {
   transactions: Transaction[];
   getEntityName: (transaction: Transaction) => string;
   getEntityType: (transaction: Transaction) => string;
-  viewTransactionHistory: (transaction: Transaction) => void;
 }
 
 const TransactionsList: React.FC<TransactionsListProps> = ({ 
   transactions, 
   getEntityName, 
-  getEntityType,
-  viewTransactionHistory
+  getEntityType
 }) => {
   if (transactions.length === 0) {
     return (
@@ -402,84 +381,83 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   
   return (
     <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Entity</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Payment Mode</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Bill ID</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {transactions.map((transaction) => {
-            const entityName = getEntityName(transaction);
-            const entityType = getEntityType(transaction);
-            
-            return (
-              <TableRow key={transaction.id} className="hover:bg-muted/50">
-                <TableCell>
-                  {format(new Date(transaction.date), 'MMM d, yyyy')}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{entityName}</span>
-                    <span className={`text-xs px-2 py-1 rounded w-fit ${
-                      entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Entity</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Payment Mode</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Bill ID</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Updated</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {transactions.map((transaction) => {
+              const entityName = getEntityName(transaction);
+              const entityType = getEntityType(transaction);
+              
+              return (
+                <TableRow key={transaction.id} className="hover:bg-muted/50">
+                  <TableCell className="whitespace-nowrap">
+                    {format(new Date(transaction.date), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{entityName}</span>
+                      <span className={`text-xs px-2 py-1 rounded w-fit ${
+                        entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {entityType}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                      transaction.type === 'credit' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
                     }`}>
-                      {entityType}
+                      {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
                     </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className={`px-3 py-2 rounded-full text-xs font-medium ${
-                    transaction.type === 'credit' 
-                      ? 'bg-green-200 text-green-800' 
-                      : 'bg-red-200 text-red-800'
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-xs">
+                      <p className="font-medium truncate">{transaction.purchase_description || 'No description'}</p>
+                      {transaction.additional_notes && (
+                        <p className="text-sm text-gray-500 mt-1 truncate">{transaction.additional_notes}</p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{transaction.quantity}</TableCell>
+                  <TableCell className="whitespace-nowrap">{transaction.payment_mode}</TableCell>
+                  <TableCell className={`font-bold whitespace-nowrap ${
+                    transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <p className="font-medium">{transaction.purchase_description || 'No description'}</p>
-                    {transaction.additional_notes && (
-                      <p className="text-sm text-gray-500 mt-1">{transaction.additional_notes}</p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>{transaction.quantity}</TableCell>
-                <TableCell>{transaction.payment_mode}</TableCell>
-                <TableCell className={`font-bold ${
-                  transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
-                    style: 'currency', 
-                    currency: 'PKR',
-                    currencyDisplay: 'narrowSymbol'
-                  }).format(transaction.amount)}
-                </TableCell>
-                <TableCell>{transaction.bill_id}</TableCell>
-                <TableCell>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => viewTransactionHistory(transaction)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <History className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                    {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
+                      style: 'currency', 
+                      currency: 'PKR',
+                      currencyDisplay: 'narrowSymbol'
+                    }).format(transaction.amount)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">{transaction.bill_id}</TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                    {format(new Date(transaction.created_at), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                    {format(new Date(transaction.updated_at), 'MMM d, yyyy')}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 };

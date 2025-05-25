@@ -14,28 +14,44 @@ import TransactionsPage from '@/pages/TransactionsPage';
 import BillPage from '@/pages/BillPage';
 import BillingHistoryPage from '@/pages/BillingHistoryPage';
 import SettingsPage from '@/pages/SettingsPage';
+import CustomerDetailPage from '@/pages/CustomerDetailPage';
+import CompanyDetailPage from '@/pages/CompanyDetailPage';
 
 const MainLayout: React.FC = () => {
   const [currentPath, setCurrentPath] = useState('/');
+  const [currentParams, setCurrentParams] = useState<{ [key: string]: string }>({});
   const { state, dispatch } = useApp();
   const { toast } = useToast();
 
   const handleLogout = () => {
     dispatch({ type: 'SET_CURRENT_USER', payload: null });
+    setCurrentPath('/');
     toast({
       title: "Logged out successfully",
       description: "You've been logged out of the system",
     });
   };
 
+  const handleNavigate = (path: string, params?: { [key: string]: string }) => {
+    setCurrentPath(path);
+    setCurrentParams(params || {});
+  };
+
   const renderContent = () => {
+    if (currentPath.startsWith('/customers/') && currentParams.customerId) {
+      return <CustomerDetailPage customerId={currentParams.customerId} onNavigate={handleNavigate} />;
+    }
+    if (currentPath.startsWith('/companies/') && currentParams.companyId) {
+      return <CompanyDetailPage companyId={currentParams.companyId} onNavigate={handleNavigate} />;
+    }
+    
     switch (currentPath) {
       case '/':
         return <Homepage />;
       case '/customers':
-        return <CustomersPage />;
+        return <CustomersPage onNavigate={handleNavigate} />;
       case '/companies':
-        return <CompaniesPage />;
+        return <CompaniesPage onNavigate={handleNavigate} />;
       case '/transactions':
         return <TransactionsPage />;
       case '/bill':
@@ -53,32 +69,32 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex">
       <FloatingNavigation 
         currentPath={currentPath}
-        onNavigate={setCurrentPath}
+        onNavigate={(path) => handleNavigate(path)}
       />
       
-      <div className="flex-1 ml-16">
+      <div className="flex-1 ml-4 sm:ml-16">
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-bold text-primary">
+              <h1 className="text-lg sm:text-xl font-bold text-primary">
                 {state.settings.shop_name}
               </h1>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">{state.currentUser?.name}</span>
+                <span className="text-sm font-medium hidden sm:block">{state.currentUser?.name}</span>
               </div>
               <Button variant="outline" onClick={handleLogout} size="sm">
                 <LogOut className="w-3.5 h-3.5 mr-1" />
-                Logout
+                <span className="hidden sm:block">Logout</span>
               </Button>
             </div>
           </div>
         </header>
         
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-4 sm:py-8">
           <div className="animate-fade-in">
             {renderContent()}
           </div>

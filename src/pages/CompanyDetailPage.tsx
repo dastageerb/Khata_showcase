@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +12,12 @@ import { ArrowLeft, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 
-const CompanyDetailPage: React.FC = () => {
-  const { companyId } = useParams();
-  const navigate = useNavigate();
+interface CompanyDetailPageProps {
+  companyId: string;
+  onNavigate: (path: string, params?: { [key: string]: string }) => void;
+}
+
+const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavigate }) => {
   const { state, dispatch, generateId, addHistoryEntry, calculateCompanyBalance } = useApp();
   const { toast } = useToast();
   
@@ -110,7 +112,7 @@ const CompanyDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" onClick={() => navigate('/companies')} className="p-2">
+        <Button variant="ghost" onClick={() => onNavigate('/companies')} className="p-2">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -119,108 +121,122 @@ const CompanyDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Company Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Name</h3>
-              <p className="font-semibold">{company.name}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Contact Number</h3>
-              <p>{company.contact_number}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500">Address</h3>
-              <p>{company.address || 'Not provided'}</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Company Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Name</h3>
+                <p className="font-semibold">{company.name}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Contact Number</h3>
+                <p>{company.contact_number}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Address</h3>
+                <p>{company.address || 'Not provided'}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Balance Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary mb-2">
+                  {new Intl.NumberFormat('en-US', { 
+                    style: 'currency', 
+                    currency: 'PKR',
+                    currencyDisplay: 'narrowSymbol'
+                  }).format(balance)}
+                </div>
+                <p className="text-gray-500 mb-4">Current Balance</p>
+                <Button 
+                  onClick={() => setIsTransactionFormOpen(true)}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Transaction
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Balance Summary</CardTitle>
+            <CardTitle>Transaction History</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">
-                {new Intl.NumberFormat('en-US', { 
-                  style: 'currency', 
-                  currency: 'PKR',
-                  currencyDisplay: 'narrowSymbol'
-                }).format(balance)}
+            {companyTransactions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No transactions found</p>
               </div>
-              <p className="text-gray-500 mb-4">Current Balance</p>
-              <Button 
-                onClick={() => setIsTransactionFormOpen(true)}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Transaction
-              </Button>
-            </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Payment Mode</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Bill ID</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Updated</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companyTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="whitespace-nowrap">
+                          {format(new Date(transaction.date), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            transaction.type === 'credit' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <div className="truncate">{transaction.purchase_description || 'No description'}</div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">{transaction.payment_mode}</TableCell>
+                        <TableCell className={`font-bold whitespace-nowrap ${
+                          transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
+                            style: 'currency', 
+                            currency: 'PKR',
+                            currencyDisplay: 'narrowSymbol'
+                          }).format(transaction.amount)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">{transaction.bill_id}</TableCell>
+                        <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                          {format(new Date(transaction.created_at), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                          {format(new Date(transaction.updated_at), 'MMM d, yyyy')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {companyTransactions.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No transactions found</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Payment Mode</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Bill ID</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {companyTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      {format(new Date(transaction.date), 'MMM d, yyyy')}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        transaction.type === 'credit' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
-                      </span>
-                    </TableCell>
-                    <TableCell>{transaction.purchase_description || 'No description'}</TableCell>
-                    <TableCell>{transaction.payment_mode}</TableCell>
-                    <TableCell className={`font-bold ${
-                      transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
-                        style: 'currency', 
-                        currency: 'PKR',
-                        currencyDisplay: 'narrowSymbol'
-                      }).format(transaction.amount)}
-                    </TableCell>
-                    <TableCell>{transaction.bill_id}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Transaction Form Dialog */}
       <Dialog open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen}>
