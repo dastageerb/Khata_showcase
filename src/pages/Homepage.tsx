@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,28 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Users, Store } from 'lucide-react';
-import { format } from 'date-fns';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-interface Transaction {
-  id: string;
-  customer_id: string;
-  company_id: string;
-  date: Date;
-  quantity: number;
-  payment_mode: string;
-  bill_id: string;
-  purchase_description: string;
-  additional_notes: string;
-  amount: number;
-  type: 'credit' | 'debit';
-  created_by: string;
-  created_at: Date;
-  updated_at: Date;
-  updated_by: string;
-  history: any[];
-}
 
 const Homepage: React.FC = () => {
   const { state, dispatch, generateId, addHistoryEntry } = useApp();
@@ -45,32 +24,6 @@ const Homepage: React.FC = () => {
     amount: 0,
     type: 'credit' as 'credit' | 'debit'
   });
-
-  const totalCustomers = state.customers.length;
-  const totalCompanies = state.companies.length;
-  const totalTransactions = state.customerTransactions.length + state.companyTransactions.length;
-
-  const calculateTotalRevenue = () => {
-    let total = 0;
-    state.customerTransactions.forEach(transaction => {
-      if (transaction.type === 'credit') {
-        total += transaction.amount;
-      } else {
-        total -= transaction.amount;
-      }
-    });
-
-    state.companyTransactions.forEach(transaction => {
-      if (transaction.type === 'credit') {
-        total += transaction.amount;
-      } else {
-        total -= transaction.amount;
-      }
-    });
-    return total;
-  };
-
-  const totalRevenue = calculateTotalRevenue();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,233 +119,122 @@ const Homepage: React.FC = () => {
     }, 1000);
   };
 
-  const recentTransactions = [...state.customerTransactions, ...state.companyTransactions]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>Customers</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalCustomers}</div>
-            <p className="text-sm text-gray-500">Total number of customers</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Store className="h-4 w-4" />
-              <span>Companies</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{totalCompanies}</div>
-            <p className="text-sm text-gray-500">Total number of companies</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <DollarSign className="h-4 w-4" />
-              <span>Total Revenue</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {new Intl.NumberFormat('en-US', { 
-                style: 'currency', 
-                currency: 'PKR',
-                currencyDisplay: 'narrowSymbol'
-              }).format(totalRevenue)}
+    <div className="max-w-2xl mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>Add New Transaction</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant={formData.entity_type === 'customer' ? 'default' : 'outline'}
+                  onClick={() => setFormData({...formData, entity_type: 'customer'})}
+                  className="h-8"
+                >
+                  Customer
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.entity_type === 'company' ? 'default' : 'outline'}
+                  onClick={() => setFormData({...formData, entity_type: 'company'})}
+                  className="h-8"
+                >
+                  Company
+                </Button>
+              </div>
             </div>
-            <p className="text-sm text-gray-500">Overall revenue from transactions</p>
-          </CardContent>
-        </Card>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Add New Transaction</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    type="button"
-                    variant={formData.entity_type === 'customer' ? 'default' : 'outline'}
-                    onClick={() => setFormData({...formData, entity_type: 'customer'})}
-                    className="h-8"
-                  >
-                    Customer
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={formData.entity_type === 'company' ? 'default' : 'outline'}
-                    onClick={() => setFormData({...formData, entity_type: 'company'})}
-                    className="h-8"
-                  >
-                    Company
-                  </Button>
-                </div>
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="flex items-center space-x-2">
+                <Button
+                  type="button"
+                  variant={formData.type === 'credit' ? 'default' : 'outline'}
+                  onClick={() => setFormData({...formData, type: 'credit'})}
+                  className={`h-8 ${formData.type === 'credit' ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-600 hover:bg-green-50'}`}
+                >
+                  Credit (+)
+                </Button>
+                <Button
+                  type="button"
+                  variant={formData.type === 'debit' ? 'default' : 'outline'}
+                  onClick={() => setFormData({...formData, type: 'debit'})}
+                  className={`h-8 ${formData.type === 'debit' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-600 hover:bg-red-50'}`}
+                >
+                  Debit (-)
+                </Button>
               </div>
+            </div>
 
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="flex items-center space-x-2">
-                  <Button
-                    type="button"
-                    variant={formData.type === 'credit' ? 'default' : 'outline'}
-                    onClick={() => setFormData({...formData, type: 'credit'})}
-                    className={`h-8 ${formData.type === 'credit' ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-600 hover:bg-green-50'}`}
-                  >
-                    Credit (+)
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={formData.type === 'debit' ? 'default' : 'outline'}
-                    onClick={() => setFormData({...formData, type: 'debit'})}
-                    className={`h-8 ${formData.type === 'debit' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-600 hover:bg-red-50'}`}
-                  >
-                    Debit (-)
-                  </Button>
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="entity_name">{formData.entity_type === 'customer' ? 'Customer' : 'Company'} Name</Label>
+              <Input
+                id="entity_name"
+                value={formData.entity_name}
+                onChange={(e) => setFormData({...formData, entity_name: e.target.value})}
+                placeholder={`Enter ${formData.entity_type} name`}
+                required
+              />
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="entity_name">{formData.entity_type === 'customer' ? 'Customer' : 'Company'} Name</Label>
+                <Label htmlFor="amount">Amount</Label>
                 <Input
-                  id="entity_name"
-                  value={formData.entity_name}
-                  onChange={(e) => setFormData({...formData, entity_name: e.target.value})}
-                  placeholder={`Enter ${formData.entity_type} name`}
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="amount">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
               <div>
-                <Label htmlFor="payment_mode">Payment Mode</Label>
-                <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select payment mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Online">Online</SelectItem>
-                    <SelectItem value="Check">Check</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Purchase Description (Optional)</Label>
+                <Label htmlFor="date">Date</Label>
                 <Input
-                  id="description"
-                  value={formData.purchase_description}
-                  onChange={(e) => setFormData({...formData, purchase_description: e.target.value})}
-                  placeholder="Enter description"
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  required
                 />
               </div>
+            </div>
 
-              <Button type="submit" className="w-full" disabled={state.isLoading}>
-                {state.isLoading ? 'Adding Transaction...' : 'Add Transaction'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <div>
+              <Label htmlFor="payment_mode">Payment Mode</Label>
+              <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="Online">Online</SelectItem>
+                  <SelectItem value="Check">Check</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentTransactions.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No recent transactions found</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Payment Mode</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentTransactions.map((transaction: Transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell className="whitespace-nowrap">
-                          {format(new Date(transaction.date), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            transaction.type === 'credit' 
-                              ? 'bg-green-100 text-green-700' 
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
-                          </span>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <div className="truncate">{transaction.purchase_description || 'No description'}</div>
-                        </TableCell>
-                        <TableCell className={`font-bold whitespace-nowrap ${
-                          transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
-                            style: 'currency', 
-                            currency: 'PKR',
-                            currencyDisplay: 'narrowSymbol'
-                          }).format(transaction.amount)}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">{transaction.payment_mode}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            <div>
+              <Label htmlFor="description">Purchase Description (Optional)</Label>
+              <Input
+                id="description"
+                value={formData.purchase_description}
+                onChange={(e) => setFormData({...formData, purchase_description: e.target.value})}
+                placeholder="Enter description"
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={state.isLoading}>
+              {state.isLoading ? 'Adding Transaction...' : 'Add Transaction'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

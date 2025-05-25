@@ -20,6 +20,7 @@ import CompanyDetailPage from '@/pages/CompanyDetailPage';
 const MainLayout: React.FC = () => {
   const [currentPath, setCurrentPath] = useState('/');
   const [currentParams, setCurrentParams] = useState<{ [key: string]: string }>({});
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
   const { state, dispatch } = useApp();
   const { toast } = useToast();
 
@@ -70,9 +71,10 @@ const MainLayout: React.FC = () => {
       <FloatingNavigation 
         currentPath={currentPath}
         onNavigate={(path) => handleNavigate(path)}
+        onExpandedChange={setIsNavExpanded}
       />
       
-      <div className="flex-1 ml-4 sm:ml-16">
+      <div className={`flex-1 transition-all duration-300 ${isNavExpanded ? 'ml-48 sm:ml-52' : 'ml-4 sm:ml-16'}`}>
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center space-x-2">

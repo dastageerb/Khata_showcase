@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Users, Building, Activity, Receipt, Archive, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -23,10 +23,21 @@ const navigationItems: NavigationItem[] = [
 interface FloatingNavigationProps {
   currentPath: string;
   onNavigate: (path: string) => void;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
-const FloatingNavigation: React.FC<FloatingNavigationProps> = ({ currentPath, onNavigate }) => {
+const FloatingNavigation: React.FC<FloatingNavigationProps> = ({ currentPath, onNavigate, onExpandedChange }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (onExpandedChange) {
+      onExpandedChange(isExpanded);
+    }
+  }, [isExpanded, onExpandedChange]);
+
+  const handleToggle = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   return (
     <div className="fixed left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-50">
@@ -73,7 +84,7 @@ const FloatingNavigation: React.FC<FloatingNavigationProps> = ({ currentPath, on
         <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
           <Button
             variant="outline"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={handleToggle}
             className={`
               transition-all duration-300 transform hover:scale-105
               ${isExpanded ? 'w-full justify-center' : 'w-10 h-10 sm:w-12 sm:h-12 p-0 justify-center'}
