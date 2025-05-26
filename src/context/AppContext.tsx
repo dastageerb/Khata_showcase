@@ -306,7 +306,9 @@ type AppAction =
   | { type: 'UPDATE_COMPANY'; payload: Company }
   | { type: 'DELETE_COMPANY'; payload: string }
   | { type: 'ADD_CUSTOMER_TRANSACTION'; payload: Transaction }
+  | { type: 'DELETE_CUSTOMER_TRANSACTION'; payload: string }
   | { type: 'ADD_COMPANY_TRANSACTION'; payload: Transaction }
+  | { type: 'DELETE_COMPANY_TRANSACTION'; payload: string }
   | { type: 'ADD_BILL'; payload: Bill }
   | { type: 'ADD_BILL_ITEM'; payload: BillItem }
   | { type: 'ADD_PRODUCT'; payload: Product }
@@ -354,10 +356,20 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         ...state,
         customerTransactions: [...state.customerTransactions, action.payload]
       };
+    case 'DELETE_CUSTOMER_TRANSACTION':
+      return {
+        ...state,
+        customerTransactions: state.customerTransactions.filter(t => t.id !== action.payload)
+      };
     case 'ADD_COMPANY_TRANSACTION':
       return {
         ...state,
         companyTransactions: [...state.companyTransactions, action.payload]
+      };
+    case 'DELETE_COMPANY_TRANSACTION':
+      return {
+        ...state,
+        companyTransactions: state.companyTransactions.filter(t => t.id !== action.payload)
       };
     case 'ADD_BILL':
       return { ...state, bills: [...state.bills, action.payload] };
