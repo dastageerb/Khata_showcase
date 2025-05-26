@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -23,9 +22,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Bill, BillItem } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 
-// Import chart components
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-
 const BillingHistoryPage: React.FC = () => {
   const { state } = useApp();
   const { toast } = useToast();
@@ -43,7 +39,6 @@ const BillingHistoryPage: React.FC = () => {
   const [expandedBills, setExpandedBills] = useState<Record<string, boolean>>({});
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
-  const [salesData, setSalesData] = useState<any[]>([]);
   
   // Filter and sort bills
   useEffect(() => {
@@ -85,37 +80,6 @@ const BillingHistoryPage: React.FC = () => {
     
     setBills(filteredBills);
   }, [searchQuery, dateFilter, statusFilter, state.bills]);
-  
-  // Generate sales data for charts
-  useEffect(() => {
-    // Group by day for the last 7 days
-    const dailySales: Record<string, { date: string, sales: number, count: number }> = {};
-    
-    // Use all bills for the chart data
-    state.bills.forEach(bill => {
-      const billDate = new Date(bill.date);
-      const dateKey = format(billDate, 'yyyy-MM-dd');
-      const displayDate = format(billDate, 'MMM dd');
-      
-      if (!dailySales[dateKey]) {
-        dailySales[dateKey] = { date: displayDate, sales: 0, count: 0 };
-      }
-      
-      dailySales[dateKey].sales += bill.total_amount;
-      dailySales[dateKey].count += 1;
-    });
-    
-    // Convert to array and sort by date
-    const salesDataArray = Object.values(dailySales)
-      .sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
-        return dateA.getTime() - dateB.getTime();
-      })
-      .slice(-7); // Last 7 days
-    
-    setSalesData(salesDataArray);
-  }, [state.bills]);
   
   const handleClearFilters = () => {
     setDateFilter({ from: undefined, to: undefined });
@@ -179,21 +143,12 @@ const BillingHistoryPage: React.FC = () => {
     groupedBills[dateKey].push(bill);
   });
   
-  // Prepare chart data for customer vs company transactions
-  const customerTotal = state.customerTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const companyTotal = state.companyTransactions.reduce((sum, t) => sum + t.amount, 0);
-  
-  const entityComparisonData = [
-    { name: 'Customer', value: customerTotal },
-    { name: 'Company', value: companyTotal }
-  ];
-  
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Billing History</h1>
-          <p className="text-gray-500">View and analyze your billing history</p>
+          <p className="text-gray-500">View and manage your billing history</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
@@ -222,232 +177,118 @@ const BillingHistoryPage: React.FC = () => {
         </div>
       </div>
       
-      <Tabs defaultValue="history">
-        <TabsList className="mb-4">
-          <TabsTrigger value="history">Billing History</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="history" className="space-y-6">
-          {Object.keys(groupedBills).length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8">
-                <p className="text-xl font-medium text-gray-400 mb-4">No bills found</p>
-                <p className="text-gray-500">Try adjusting your filters or search criteria</p>
-              </CardContent>
-            </Card>
-          ) : (
-            Object.entries(groupedBills).map(([dateKey, dateBills]) => (
-              <div key={dateKey} className="space-y-2">
-                <h3 className="font-medium text-gray-500">
-                  {formatDateLabel(new Date(dateKey))}
-                </h3>
-                
-                <div className="space-y-4">
-                  {dateBills.map((bill) => (
-                    <Card key={bill.id} className="transition-all hover:shadow-sm">
-                      <CardContent className="p-0">
-                        <div className="p-4">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="flex items-center space-x-2">
-                                <span className="font-semibold">{bill.serial_no}</span>
-                                <span className={`text-xs px-2 py-1 rounded ${
-                                  bill.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                }`}>
-                                  {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {format(new Date(bill.date), 'h:mm a')} • Customer: {bill.customer_name}
-                              </p>
+      {Object.keys(groupedBills).length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <p className="text-xl font-medium text-gray-400 mb-4">No bills found</p>
+            <p className="text-gray-500">Try adjusting your filters or search criteria</p>
+          </CardContent>
+        </Card>
+      ) : (
+        Object.entries(groupedBills).map(([dateKey, dateBills]) => (
+          <div key={dateKey} className="space-y-2">
+            <h3 className="font-medium text-gray-500">
+              {formatDateLabel(new Date(dateKey))}
+            </h3>
+            
+            <div className="space-y-4">
+              {dateBills.map((bill) => (
+                <Card key={bill.id} className="transition-all hover:shadow-sm">
+                  <CardContent className="p-0">
+                    <div className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-semibold">{bill.serial_no}</span>
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              bill.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {format(new Date(bill.date), 'h:mm a')} • Customer: {bill.customer_name}
+                          </p>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="font-bold text-primary">
+                            {new Intl.NumberFormat('en-US', { 
+                              style: 'currency', 
+                              currency: 'PKR',
+                              currencyDisplay: 'narrowSymbol'
+                            }).format(bill.total_amount)}
+                          </p>
+                          <div className="flex space-x-1 mt-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => toggleBillExpand(bill.id)}
+                              className="text-xs h-8"
+                            >
+                              {expandedBills[bill.id] ? (
+                                <><ChevronUp className="h-3 w-3 mr-1" />Hide items</>
+                              ) : (
+                                <><ChevronDown className="h-3 w-3 mr-1" />Show items</>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handlePrintBill(bill)}
+                              className="text-xs h-8"
+                            >
+                              <Printer className="h-3 w-3 mr-1" />Print
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {expandedBills[bill.id] && (
+                        <div className="mt-4 border-t pt-4">
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
+                              <div className="col-span-5">Item</div>
+                              <div className="col-span-2 text-center">Qty</div>
+                              <div className="col-span-2 text-right">Rate</div>
+                              <div className="col-span-3 text-right">Amount</div>
                             </div>
                             
-                            <div className="text-right">
-                              <p className="font-bold text-primary">
-                                {new Intl.NumberFormat('en-US', { 
-                                  style: 'currency', 
-                                  currency: 'PKR',
-                                  currencyDisplay: 'narrowSymbol'
-                                }).format(bill.total_amount)}
-                              </p>
-                              <div className="flex space-x-1 mt-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => toggleBillExpand(bill.id)}
-                                  className="text-xs h-8"
-                                >
-                                  {expandedBills[bill.id] ? (
-                                    <><ChevronUp className="h-3 w-3 mr-1" />Hide items</>
-                                  ) : (
-                                    <><ChevronDown className="h-3 w-3 mr-1" />Show items</>
-                                  )}
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handlePrintBill(bill)}
-                                  className="text-xs h-8"
-                                >
-                                  <Printer className="h-3 w-3 mr-1" />Print
-                                </Button>
-                              </div>
+                            <Separator />
+                            
+                            <div className="space-y-2">
+                              {getBillItems(bill.id).map((item: BillItem) => (
+                                <div key={item.id} className="grid grid-cols-12 gap-2 text-sm">
+                                  <div className="col-span-5">{item.product_name}</div>
+                                  <div className="col-span-2 text-center">{item.quantity}</div>
+                                  <div className="col-span-2 text-right">
+                                    {new Intl.NumberFormat('en-US', { 
+                                      style: 'currency', 
+                                      currency: 'PKR',
+                                      currencyDisplay: 'narrowSymbol'
+                                    }).format(item.price)}
+                                  </div>
+                                  <div className="col-span-3 text-right">
+                                    {new Intl.NumberFormat('en-US', { 
+                                      style: 'currency', 
+                                      currency: 'PKR',
+                                      currencyDisplay: 'narrowSymbol'
+                                    }).format(item.amount)}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                          
-                          {expandedBills[bill.id] && (
-                            <div className="mt-4 border-t pt-4">
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
-                                  <div className="col-span-5">Item</div>
-                                  <div className="col-span-2 text-center">Qty</div>
-                                  <div className="col-span-2 text-right">Rate</div>
-                                  <div className="col-span-3 text-right">Amount</div>
-                                </div>
-                                
-                                <Separator />
-                                
-                                <div className="space-y-2">
-                                  {getBillItems(bill.id).map((item: BillItem) => (
-                                    <div key={item.id} className="grid grid-cols-12 gap-2 text-sm">
-                                      <div className="col-span-5">{item.product_name}</div>
-                                      <div className="col-span-2 text-center">{item.quantity}</div>
-                                      <div className="col-span-2 text-right">
-                                        {new Intl.NumberFormat('en-US', { 
-                                          style: 'currency', 
-                                          currency: 'PKR',
-                                          currencyDisplay: 'narrowSymbol'
-                                        }).format(item.price)}
-                                      </div>
-                                      <div className="col-span-3 text-right">
-                                        {new Intl.NumberFormat('en-US', { 
-                                          style: 'currency', 
-                                          currency: 'PKR',
-                                          currencyDisplay: 'narrowSymbol'
-                                        }).format(item.amount)}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sales Trend (Last 7 Days)</CardTitle>
-                <CardDescription>Daily sales amount</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={salesData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value: any) => [
-                        new Intl.NumberFormat('en-US', { 
-                          style: 'currency', 
-                          currency: 'PKR',
-                          currencyDisplay: 'narrowSymbol'
-                        }).format(value),
-                        'Sales'
-                      ]}
-                    />
-                    <Legend />
-                    <Bar name="Sales Amount" dataKey="sales" fill="#1B56FD" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Transaction Distribution</CardTitle>
-                <CardDescription>Customer vs Company transactions</CardDescription>
-              </CardHeader>
-              <CardContent className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={entityComparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value: any) => [
-                        new Intl.NumberFormat('en-US', { 
-                          style: 'currency', 
-                          currency: 'PKR',
-                          currencyDisplay: 'narrowSymbol'
-                        }).format(value),
-                        'Total Amount'
-                      ]}
-                    />
-                    <Legend />
-                    <Bar name="Transaction Amount" dataKey="value" fill="#1B56FD" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Key Statistics</CardTitle>
-              <CardDescription>Overall billing performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-gray-500">Total Bills</h3>
-                  <p className="text-2xl font-bold">{state.bills.length}</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    {new Intl.NumberFormat('en-US', { 
-                      style: 'currency', 
-                      currency: 'PKR',
-                      currencyDisplay: 'narrowSymbol'
-                    }).format(state.bills.reduce((sum, bill) => sum + bill.total_amount, 0))}
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-gray-500">Avg. Bill Value</h3>
-                  <p className="text-2xl font-bold">
-                    {state.bills.length > 0 ? 
-                      new Intl.NumberFormat('en-US', { 
-                        style: 'currency', 
-                        currency: 'PKR',
-                        currencyDisplay: 'narrowSymbol'
-                      }).format(state.bills.reduce((sum, bill) => sum + bill.total_amount, 0) / state.bills.length) :
-                      'N/A'
-                    }
-                  </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-gray-500">Items Sold</h3>
-                  <p className="text-2xl font-bold">{state.billItems.reduce((sum, item) => sum + item.quantity, 0)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        ))
+      )}
       
       {/* Filter Dialog */}
       <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>

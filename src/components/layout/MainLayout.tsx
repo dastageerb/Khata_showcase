@@ -13,6 +13,7 @@ import CompaniesPage from '@/pages/CompaniesPage';
 import TransactionsPage from '@/pages/TransactionsPage';
 import BillPage from '@/pages/BillPage';
 import BillingHistoryPage from '@/pages/BillingHistoryPage';
+import SalesPage from '@/pages/SalesPage';
 import SettingsPage from '@/pages/SettingsPage';
 import CustomerDetailPage from '@/pages/CustomerDetailPage';
 import CompanyDetailPage from '@/pages/CompanyDetailPage';
@@ -57,6 +58,8 @@ const MainLayout: React.FC = () => {
         return <TransactionsPage />;
       case '/bill':
         return <BillPage />;
+      case '/sales':
+        return <SalesPage />;
       case '/billing-history':
         return <BillingHistoryPage />;
       case '/settings':

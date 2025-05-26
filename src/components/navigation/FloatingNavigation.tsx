@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Home, Users, Building, Activity, Receipt, Archive, Settings } from 'lucide-react';
+import { Home, Users, Building, Activity, Receipt, Archive, Settings, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface NavigationItem {
@@ -16,6 +16,7 @@ const navigationItems: NavigationItem[] = [
   { id: 'companies', icon: Building, label: 'Companies', path: '/companies' },
   { id: 'transactions', icon: Activity, label: 'Transactions', path: '/transactions' },
   { id: 'bill', icon: Receipt, label: 'Bill', path: '/bill' },
+  { id: 'sales', icon: TrendingUp, label: 'Sales', path: '/sales' },
   { id: 'history', icon: Archive, label: 'Billing History', path: '/billing-history' },
   { id: 'settings', icon: Settings, label: 'Settings', path: '/settings' },
 ];
