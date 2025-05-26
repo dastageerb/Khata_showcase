@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ArrowLeft, Plus, Building, Trash2, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
@@ -42,6 +43,25 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
       </div>
     );
   }
+
+  const handleDeleteCompany = () => {
+    dispatch({ type: 'DELETE_COMPANY', payload: companyId });
+    toast({
+      title: "Company Deleted",
+      description: `${company.name} has been deleted successfully`,
+    });
+    onNavigate('/companies');
+  };
+
+  const handleClearRecord = () => {
+    companyTransactions.forEach(transaction => {
+      dispatch({ type: 'DELETE_COMPANY_TRANSACTION', payload: transaction.id });
+    });
+    toast({
+      title: "Records Cleared",
+      description: "All transaction records have been cleared",
+    });
+  };
 
   const handleSubmitTransaction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,13 +167,32 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
             </div>
             
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="ghost"
-                className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
-                title="Delete"
-              >
-                <Trash2 className="h-5 w-5" />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost"
+                    className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
+                    title="Delete"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Company</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete {company.name}? This action cannot be undone and will remove all associated transactions.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteCompany} className="bg-red-600 hover:bg-red-700">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
               <Button 
                 variant="ghost"
                 className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
@@ -179,13 +218,31 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
             <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
               Transaction History ({companyTransactions.length})
             </h2>
-            <Button 
-              variant="outline"
-              className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear Record
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Record
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear All Records</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to clear all transaction records for {company.name}? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearRecord} className="bg-red-600 hover:bg-red-700">
+                    Clear All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
           
           {companyTransactions.length === 0 ? (

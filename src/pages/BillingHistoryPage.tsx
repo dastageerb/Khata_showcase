@@ -16,7 +16,9 @@ import {
   Download, 
   Printer,
   Search, 
-  SlidersHorizontal 
+  SlidersHorizontal,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { useApp } from '@/context/AppContext';
@@ -207,10 +209,24 @@ const BillingHistoryPage: React.FC = () => {
                             }`}>
                               {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
                             </span>
+                            {bill.created_at.getTime() !== bill.updated_at.getTime() && (
+                              <span className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 flex items-center">
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edited
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm text-gray-500 mt-1">
-                            {format(new Date(bill.date), 'h:mm a')} • Customer: {bill.customer_name}
+                            {format(new Date(bill.date), 'h:mm a')} • Customer: <span className="font-semibold">{bill.customer_name}</span>
                           </p>
+                          <div className="text-xs text-gray-400 mt-1">
+                            Created: {format(new Date(bill.created_at), 'MMM d, yyyy h:mm a')}
+                            {bill.created_at.getTime() !== bill.updated_at.getTime() && (
+                              <span className="ml-2">
+                                Updated: {format(new Date(bill.updated_at), 'MMM d, yyyy h:mm a')}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         
                         <div className="text-right">
@@ -237,6 +253,13 @@ const BillingHistoryPage: React.FC = () => {
                             <Button
                               size="sm"
                               variant="ghost"
+                              className="text-xs h-8"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               onClick={() => handlePrintBill(bill)}
                               className="text-xs h-8"
                             >
@@ -253,7 +276,8 @@ const BillingHistoryPage: React.FC = () => {
                               <div className="col-span-5">Item</div>
                               <div className="col-span-2 text-center">Qty</div>
                               <div className="col-span-2 text-right">Rate</div>
-                              <div className="col-span-3 text-right">Amount</div>
+                              <div className="col-span-2 text-right">Amount</div>
+                              <div className="col-span-1 text-center">Actions</div>
                             </div>
                             
                             <Separator />
@@ -270,12 +294,30 @@ const BillingHistoryPage: React.FC = () => {
                                       currencyDisplay: 'narrowSymbol'
                                     }).format(item.price)}
                                   </div>
-                                  <div className="col-span-3 text-right">
+                                  <div className="col-span-2 text-right">
                                     {new Intl.NumberFormat('en-US', { 
                                       style: 'currency', 
                                       currency: 'PKR',
                                       currencyDisplay: 'narrowSymbol'
                                     }).format(item.amount)}
+                                  </div>
+                                  <div className="col-span-1 text-center">
+                                    <div className="flex space-x-1 justify-center">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="p-1 h-6 w-6"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="p-1 h-6 w-6 text-red-600"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
                               ))}

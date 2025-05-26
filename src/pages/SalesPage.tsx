@@ -2,330 +2,240 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { TrendingUp, DollarSign, Users, Building, ShoppingCart } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { useApp } from '@/context/AppContext';
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, getYear, getMonth } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subDays, subWeeks, subMonths, subYears } from 'date-fns';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const SalesPage: React.FC = () => {
   const { state } = useApp();
-  const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
+  const [selectedPeriod, setSelectedPeriod] = useState('daily');
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
-  // Get all transactions
-  const allTransactions = [
-    ...state.customerTransactions,
-    ...state.companyTransactions
-  ];
-
-  // Get available years with data
+  const currentYear = new Date().getFullYear();
   const availableYears = useMemo(() => {
     const years = new Set<number>();
-    allTransactions.forEach(transaction => {
-      years.add(getYear(new Date(transaction.date)));
+    state.bills.forEach(bill => {
+      years.add(new Date(bill.date).getFullYear());
     });
     return Array.from(years).sort((a, b) => b - a);
-  }, [allTransactions]);
+  }, [state.bills]);
 
-  // Get months for current year
-  const monthNames = [
+  const getFilteredBills = () => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = now;
+
+    if (selectedPeriod === 'monthly' && selectedMonth !== null) {
+      const year = selectedYear || currentYear;
+      startDate = startOfMonth(new Date(year, selectedMonth, 1));
+      endDate = endOfMonth(new Date(year, selectedMonth, 1));
+    } else if (selectedPeriod === 'yearly' && selectedYear !== null) {
+      startDate = startOfYear(new Date(selectedYear, 0, 1));
+      endDate = endOfYear(new Date(selectedYear, 0, 1));
+    } else {
+      switch (selectedPeriod) {
+        case 'daily':
+          startDate = startOfDay(now);
+          endDate = endOfDay(now);
+          break;
+        case 'weekly':
+          startDate = startOfWeek(now);
+          endDate = endOfWeek(now);
+          break;
+        case 'monthly':
+          startDate = startOfMonth(now);
+          endDate = endOfMonth(now);
+          break;
+        case 'yearly':
+          startDate = startOfYear(now);
+          endDate = endOfYear(now);
+          break;
+        default:
+          startDate = startOfDay(now);
+          endDate = endOfDay(now);
+      }
+    }
+
+    return state.bills.filter(bill => {
+      const billDate = new Date(bill.date);
+      return billDate >= startDate && billDate <= endDate;
+    });
+  };
+
+  const filteredBills = getFilteredBills();
+
+  const salesData = useMemo(() => {
+    const data: { [key: string]: number } = {};
+    
+    filteredBills.forEach(bill => {
+      const dateKey = format(new Date(bill.date), selectedPeriod === 'daily' ? 'HH:mm' : 'MMM dd');
+      data[dateKey] = (data[dateKey] || 0) + bill.total_amount;
+    });
+
+    return Object.entries(data).map(([date, amount]) => ({
+      date,
+      amount,
+    }));
+  }, [filteredBills, selectedPeriod]);
+
+  const topProducts = useMemo(() => {
+    const productSales: { [key: string]: number } = {};
+    
+    filteredBills.forEach(bill => {
+      const billItems = state.billItems.filter(item => item.bill_id === bill.id);
+      billItems.forEach(item => {
+        productSales[item.product_name] = (productSales[item.product_name] || 0) + item.amount;
+      });
+    });
+
+    return Object.entries(productSales)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [filteredBills, state.billItems]);
+
+  const totalSales = filteredBills.reduce((sum, bill) => sum + bill.total_amount, 0);
+  const totalBills = filteredBills.length;
+  const averageSale = totalBills > 0 ? totalSales / totalBills : 0;
+
+  const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  // Filter transactions based on selected filter
-  const filteredTransactions = useMemo(() => {
-    const now = new Date();
-    
-    return allTransactions.filter(transaction => {
-      const transactionDate = new Date(transaction.date);
-      
-      switch (filterType) {
-        case 'daily':
-          return format(transactionDate, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
-        case 'weekly':
-          return transactionDate >= startOfWeek(now) && transactionDate <= endOfWeek(now);
-        case 'monthly':
-          if (selectedMonth !== null) {
-            return getYear(transactionDate) === selectedYear && getMonth(transactionDate) === selectedMonth;
-          }
-          return transactionDate >= startOfMonth(now) && transactionDate <= endOfMonth(now);
-        case 'yearly':
-          return getYear(transactionDate) === selectedYear;
-        default:
-          return true;
-      }
-    });
-  }, [allTransactions, filterType, selectedMonth, selectedYear]);
-
-  // Calculate statistics
-  const totalRevenue = filteredTransactions
-    .filter(t => t.type === 'credit')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalExpenses = filteredTransactions
-    .filter(t => t.type === 'debit')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalCustomers = new Set(
-    filteredTransactions
-      .filter(t => 'customer_id' in t)
-      .map(t => (t as any).customer_id)
-  ).size;
-
-  const totalCompanies = new Set(
-    filteredTransactions
-      .filter(t => 'company_id' in t)
-      .map(t => (t as any).company_id)
-  ).size;
-
-  // Chart data
-  const chartData = useMemo(() => {
-    const dataMap = new Map<string, { date: string; revenue: number; expenses: number }>();
-    
-    filteredTransactions.forEach(transaction => {
-      let key: string;
-      if (filterType === 'daily') {
-        key = format(new Date(transaction.date), 'HH:mm');
-      } else if (filterType === 'weekly') {
-        key = format(new Date(transaction.date), 'EEE');
-      } else if (filterType === 'monthly') {
-        key = format(new Date(transaction.date), 'dd');
-      } else {
-        key = format(new Date(transaction.date), 'MMM');
-      }
-
-      if (!dataMap.has(key)) {
-        dataMap.set(key, { date: key, revenue: 0, expenses: 0 });
-      }
-
-      const data = dataMap.get(key)!;
-      if (transaction.type === 'credit') {
-        data.revenue += transaction.amount;
-      } else {
-        data.expenses += transaction.amount;
-      }
-    });
-
-    return Array.from(dataMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredTransactions, filterType]);
-
-  const handleFilterChange = (type: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
-    setFilterType(type);
-    setSelectedMonth(null);
-    if (type === 'yearly' && availableYears.length > 0) {
-      setSelectedYear(availableYears[0]);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Sales Analytics</h1>
-        <p className="text-gray-600 mt-2">Track your business performance</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Sales Analytics</h1>
+          <p className="text-gray-600">Track your sales performance and trends</p>
+        </div>
       </div>
 
-      {/* Filter Controls */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="space-y-4">
-            {/* Main Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((type) => (
-                <Button
-                  key={type}
-                  variant={filterType === type ? 'default' : 'outline'}
-                  onClick={() => handleFilterChange(type)}
-                  className="capitalize"
-                >
-                  {type}
-                </Button>
-              ))}
-            </div>
+      {/* Filter Tabs */}
+      <div className="space-y-4">
+        <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="daily">Daily</TabsTrigger>
+            <TabsTrigger value="weekly">Weekly</TabsTrigger>
+            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+            <TabsTrigger value="yearly">Yearly</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-            {/* Month Selection for Monthly Filter */}
-            {filterType === 'monthly' && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Select Month ({selectedYear}):</p>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                  {monthNames.map((month, index) => (
-                    <Button
-                      key={month}
-                      variant={selectedMonth === index ? 'default' : 'outline'}
-                      onClick={() => setSelectedMonth(index)}
-                      className="text-xs px-2 py-1 h-auto"
-                    >
-                      {month.slice(0, 3)}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Year Selection for Yearly Filter */}
-            {filterType === 'yearly' && availableYears.length > 1 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Select Year:</p>
-                <div className="flex flex-wrap gap-2">
-                  {availableYears.map((year) => (
-                    <Button
-                      key={year}
-                      variant={selectedYear === year ? 'default' : 'outline'}
-                      onClick={() => setSelectedYear(year)}
-                      className="text-sm"
-                    >
-                      {year}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* Month Selection for Monthly View */}
+        {selectedPeriod === 'monthly' && (
+          <div className="flex flex-wrap gap-2">
+            {months.map((month, index) => (
+              <Button
+                key={month}
+                variant={selectedMonth === index ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedMonth(selectedMonth === index ? null : index)}
+              >
+                {month}
+              </Button>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Year Selection for Yearly View */}
+        {selectedPeriod === 'yearly' && (
+          <div className="flex flex-wrap gap-2">
+            {availableYears.map((year) => (
+              <Button
+                key={year}
+                variant={selectedYear === year ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedYear(selectedYear === year ? null : year)}
+              >
+                {year}
+              </Button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-green-600">
-                  PKR {totalRevenue.toLocaleString()}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Rs {totalSales.toLocaleString()}</div>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                <p className="text-2xl font-bold text-red-600">
-                  PKR {totalExpenses.toLocaleString()}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-red-600" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bills</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalBills}</div>
           </CardContent>
         </Card>
-
+        
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Customers</p>
-                <p className="text-2xl font-bold text-blue-600">{totalCustomers}</p>
-              </div>
-              <Users className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Companies</p>
-                <p className="text-2xl font-bold text-purple-600">{totalCompanies}</p>
-              </div>
-              <Building className="h-8 w-8 text-purple-600" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Sale</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Rs {averageSale.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Revenue vs Expenses Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Revenue vs Expenses</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sales Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={salesData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip 
-                  formatter={(value, name) => [
-                    `PKR ${Number(value).toLocaleString()}`,
-                    name === 'revenue' ? 'Revenue' : 'Expenses'
-                  ]}
-                />
-                <Bar dataKey="revenue" fill="#22c55e" name="revenue" />
-                <Bar dataKey="expenses" fill="#ef4444" name="expenses" />
+                <Tooltip formatter={(value) => [`Rs ${value}`, 'Sales']} />
+                <Bar dataKey="amount" fill="#8884d8" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Sales Growth Trend */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sales Growth Trend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, 'Revenue']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#22c55e" 
-                  strokeWidth={3}
-                  dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={topProducts}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {topProducts.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [`Rs ${value}`, 'Sales']} />
+              </PieChart>
             </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Transaction Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <ShoppingCart className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <p className="text-lg font-semibold text-green-600">
-                {filteredTransactions.filter(t => t.type === 'credit').length}
-              </p>
-              <p className="text-sm text-gray-600">Credit Transactions</p>
-            </div>
-            <div className="text-center p-4 bg-red-50 rounded-lg">
-              <TrendingUp className="h-8 w-8 text-red-600 mx-auto mb-2" />
-              <p className="text-lg font-semibold text-red-600">
-                {filteredTransactions.filter(t => t.type === 'debit').length}
-              </p>
-              <p className="text-sm text-gray-600">Debit Transactions</p>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-lg font-semibold text-blue-600">
-                PKR {(totalRevenue - totalExpenses).toLocaleString()}
-              </p>
-              <p className="text-sm text-gray-600">Net Profit</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

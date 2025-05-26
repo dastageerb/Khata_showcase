@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { ArrowLeft, Plus, User, Trash2, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
@@ -42,6 +43,25 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
       </div>
     );
   }
+
+  const handleDeleteCustomer = () => {
+    dispatch({ type: 'DELETE_CUSTOMER', payload: customerId });
+    toast({
+      title: "Customer Deleted",
+      description: `${customer.name} has been deleted successfully`,
+    });
+    onNavigate('/customers');
+  };
+
+  const handleClearRecord = () => {
+    customerTransactions.forEach(transaction => {
+      dispatch({ type: 'DELETE_CUSTOMER_TRANSACTION', payload: transaction.id });
+    });
+    toast({
+      title: "Records Cleared",
+      description: "All transaction records have been cleared",
+    });
+  };
 
   const handleSubmitTransaction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +153,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
               <div>
                 <h2 className="text-xl font-semibold text-primary">{customer.name}</h2>
                 <p className="text-sm text-gray-500">Phone: {customer.phone}</p>
-                <p className="text-sm text-gray-500">NIC: {customer.nic_number || 'Not provided'}</p>
+                <p className="text-sm text-gray-500">NIC: {customer.nic_number}</p>
                 <p className="text-sm text-gray-500">Address: {customer.address || 'Not provided'}</p>
               </div>
             </div>
@@ -148,13 +168,32 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
             </div>
             
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="ghost"
-                className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
-                title="Delete"
-              >
-                <Trash2 className="h-5 w-5" />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost"
+                    className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
+                    title="Delete"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete {customer.name}? This action cannot be undone and will remove all associated transactions.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteCustomer} className="bg-red-600 hover:bg-red-700">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
               <Button 
                 variant="ghost"
                 className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
@@ -180,13 +219,31 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
             <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
               Transaction History ({customerTransactions.length})
             </h2>
-            <Button 
-              variant="outline"
-              className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear Record
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear Record
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear All Records</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to clear all transaction records for {customer.name}? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearRecord} className="bg-red-600 hover:bg-red-700">
+                    Clear All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
           
           {customerTransactions.length === 0 ? (
