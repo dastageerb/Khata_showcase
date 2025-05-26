@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Plus, Building, Trash2, Edit, ClearAll } from 'lucide-react';
+import { ArrowLeft, Plus, Building, Trash2, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 
@@ -184,7 +183,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
               variant="outline"
               className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700"
             >
-              <ClearAll className="h-4 w-4 mr-2" />
+              <Trash2 className="h-4 w-4 mr-2" />
               Clear Record
             </Button>
           </div>

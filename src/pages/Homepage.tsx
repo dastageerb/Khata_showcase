@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, User, Plus } from 'lucide-react';
+import { Building, User, Plus, Search } from 'lucide-react';
 
 const Homepage: React.FC = () => {
   const { state, dispatch, generateId, addHistoryEntry } = useApp();
@@ -69,6 +69,7 @@ const Homepage: React.FC = () => {
           phone: customerFormData.phone,
           nic_number: customerFormData.nic_number,
           address: customerFormData.address,
+          balance: 0,
           created_by: state.currentUser?.id || 'system',
           created_at: new Date(),
           updated_at: new Date(),
@@ -164,6 +165,7 @@ const Homepage: React.FC = () => {
           name: companyFormData.name,
           contact_number: companyFormData.contact_number,
           address: companyFormData.address,
+          balance: 0,
           created_by: state.currentUser?.id || 'system',
           created_at: new Date(),
           updated_at: new Date(),
@@ -235,12 +237,9 @@ const Homepage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Add New Transaction</h1>
-        <p className="text-gray-500">Create new customer/company and record transactions</p>
-      </div>
-
+    <div className="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg">
+      <h1 className="text-xl font-bold text-center text-primary mb-6">Add New Transaction</h1>
+      
       <Tabs defaultValue="customer" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="customer" className="flex items-center space-x-2">
@@ -254,280 +253,289 @@ const Homepage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="customer">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>Customer Transaction</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCustomerSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="customerName">Customer Name *</Label>
-                    <Input
-                      id="customerName"
-                      value={customerFormData.name}
-                      onChange={(e) => setCustomerFormData({...customerFormData, name: e.target.value})}
-                      placeholder="Enter customer name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customerPhone">Phone Number *</Label>
-                    <Input
-                      id="customerPhone"
-                      value={customerFormData.phone}
-                      onChange={(e) => setCustomerFormData({...customerFormData, phone: e.target.value})}
-                      placeholder="Enter phone number"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="customerNic">NIC Number</Label>
-                    <Input
-                      id="customerNic"
-                      value={customerFormData.nic_number}
-                      onChange={(e) => setCustomerFormData({...customerFormData, nic_number: e.target.value})}
-                      placeholder="Enter NIC number"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customerAddress">Address</Label>
-                    <Input
-                      id="customerAddress"
-                      value={customerFormData.address}
-                      onChange={(e) => setCustomerFormData({...customerFormData, address: e.target.value})}
-                      placeholder="Enter address"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <Label htmlFor="customerAmount">Amount *</Label>
-                    <Input
-                      id="customerAmount"
-                      type="number"
-                      step="0.01"
-                      value={customerFormData.amount}
-                      onChange={(e) => setCustomerFormData({...customerFormData, amount: parseFloat(e.target.value) || 0})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customerQuantity">Quantity</Label>
-                    <Input
-                      id="customerQuantity"
-                      type="number"
-                      value={customerFormData.quantity}
-                      onChange={(e) => setCustomerFormData({...customerFormData, quantity: parseInt(e.target.value) || 1})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customerPaymentMode">Payment Mode *</Label>
-                    <Select value={customerFormData.payment_mode} onValueChange={(value) => setCustomerFormData({...customerFormData, payment_mode: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Cash">Cash</SelectItem>
-                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="Online">Online</SelectItem>
-                        <SelectItem value="Check">Check</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="customerType">Transaction Type</Label>
-                    <Select value={customerFormData.type} onValueChange={(value: 'credit' | 'debit') => setCustomerFormData({...customerFormData, type: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="credit">Credit (+)</SelectItem>
-                        <SelectItem value="debit">Debit (-)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="customerBillId">Bill ID</Label>
-                    <Input
-                      id="customerBillId"
-                      value={customerFormData.bill_id}
-                      onChange={(e) => setCustomerFormData({...customerFormData, bill_id: e.target.value})}
-                      placeholder="Enter bill ID (optional)"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customerDescription">Purchase Description</Label>
-                    <Input
-                      id="customerDescription"
-                      value={customerFormData.purchase_description}
-                      onChange={(e) => setCustomerFormData({...customerFormData, purchase_description: e.target.value})}
-                      placeholder="Enter description"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="customerNotes">Additional Notes</Label>
-                  <Textarea
-                    id="customerNotes"
-                    value={customerFormData.additional_notes}
-                    onChange={(e) => setCustomerFormData({...customerFormData, additional_notes: e.target.value})}
-                    placeholder="Enter additional notes (optional)"
-                    rows={3}
+          <form onSubmit={handleCustomerSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="customerName" className="text-sm font-medium text-gray-700 block mb-2">Customer Name</Label>
+                <div className="relative">
+                  <Input
+                    id="customerName"
+                    value={customerFormData.name}
+                    onChange={(e) => setCustomerFormData({...customerFormData, name: e.target.value})}
+                    placeholder="Search or select customer"
+                    className="pr-10 border border-gray-300 rounded-md"
+                    required
                   />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700 block mb-2">Type</Label>
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    variant={customerFormData.type === 'credit' ? 'default' : 'outline'}
+                    onClick={() => setCustomerFormData({...customerFormData, type: 'credit'})}
+                    className={`flex-1 ${customerFormData.type === 'credit' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                  >
+                    Credit (+)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={customerFormData.type === 'debit' ? 'default' : 'outline'}
+                    onClick={() => setCustomerFormData({...customerFormData, type: 'debit'})}
+                    className={`flex-1 ${customerFormData.type === 'debit' ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                  >
+                    Debit (-)
+                  </Button>
+                </div>
+              </div>
+            </div>
 
-                <Button type="submit" className="w-full" disabled={state.isLoading}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {state.isLoading ? 'Adding...' : 'Add Customer Transaction'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="customerAmount" className="text-sm font-medium text-gray-700 block mb-2">Amount</Label>
+                <Input
+                  id="customerAmount"
+                  type="number"
+                  step="0.01"
+                  value={customerFormData.amount}
+                  onChange={(e) => setCustomerFormData({...customerFormData, amount: parseFloat(e.target.value) || 0})}
+                  className="border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerQuantity" className="text-sm font-medium text-gray-700 block mb-2">Quantity</Label>
+                <Input
+                  id="customerQuantity"
+                  type="number"
+                  value={customerFormData.quantity}
+                  onChange={(e) => setCustomerFormData({...customerFormData, quantity: parseInt(e.target.value) || 1})}
+                  className="border border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerPaymentMode" className="text-sm font-medium text-gray-700 block mb-2">Payment Mode</Label>
+                <Select value={customerFormData.payment_mode} onValueChange={(value) => setCustomerFormData({...customerFormData, payment_mode: value})}>
+                  <SelectTrigger className="border border-gray-300 rounded-md">
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="Check">Check</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="customerDate" className="text-sm font-medium text-gray-700 block mb-2">Date</Label>
+                <Input
+                  id="customerDate"
+                  type="date"
+                  value={new Date().toISOString().split('T')[0]}
+                  className="border border-gray-300 rounded-md"
+                  readOnly
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="customerPhone" className="text-sm font-medium text-gray-700 block mb-2">Phone Number</Label>
+                <Input
+                  id="customerPhone"
+                  value={customerFormData.phone}
+                  onChange={(e) => setCustomerFormData({...customerFormData, phone: e.target.value})}
+                  placeholder="Enter phone number"
+                  className="border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerBillId" className="text-sm font-medium text-gray-700 block mb-2">Bill ID (Optional)</Label>
+                <Input
+                  id="customerBillId"
+                  value={customerFormData.bill_id}
+                  onChange={(e) => setCustomerFormData({...customerFormData, bill_id: e.target.value})}
+                  placeholder="Enter bill ID"
+                  className="border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="customerDescription" className="text-sm font-medium text-gray-700 block mb-2">Purchase Description</Label>
+              <Input
+                id="customerDescription"
+                value={customerFormData.purchase_description}
+                onChange={(e) => setCustomerFormData({...customerFormData, purchase_description: e.target.value})}
+                placeholder="Enter description"
+                className="border border-gray-300 rounded-md"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="customerNotes" className="text-sm font-medium text-gray-700 block mb-2">Additional Notes (Optional)</Label>
+              <Textarea
+                id="customerNotes"
+                value={customerFormData.additional_notes}
+                onChange={(e) => setCustomerFormData({...customerFormData, additional_notes: e.target.value})}
+                placeholder="Enter additional notes"
+                rows={3}
+                className="border border-gray-300 rounded-md"
+              />
+            </div>
+
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white" disabled={state.isLoading}>
+              <Plus className="h-4 w-4 mr-2" />
+              {state.isLoading ? 'Adding...' : 'Add Transaction'}
+            </Button>
+          </form>
         </TabsContent>
 
         <TabsContent value="company">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Building className="h-5 w-5" />
-                <span>Company Transaction</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleCompanySubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="companyName">Company Name *</Label>
-                    <Input
-                      id="companyName"
-                      value={companyFormData.name}
-                      onChange={(e) => setCompanyFormData({...companyFormData, name: e.target.value})}
-                      placeholder="Enter company name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="companyContact">Contact Number *</Label>
-                    <Input
-                      id="companyContact"
-                      value={companyFormData.contact_number}
-                      onChange={(e) => setCompanyFormData({...companyFormData, contact_number: e.target.value})}
-                      placeholder="Enter contact number"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="companyAddress">Address</Label>
+          <form onSubmit={handleCompanySubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="companyName" className="text-sm font-medium text-gray-700 block mb-2">Company Name</Label>
+                <div className="relative">
                   <Input
-                    id="companyAddress"
-                    value={companyFormData.address}
-                    onChange={(e) => setCompanyFormData({...companyFormData, address: e.target.value})}
-                    placeholder="Enter company address"
+                    id="companyName"
+                    value={companyFormData.name}
+                    onChange={(e) => setCompanyFormData({...companyFormData, name: e.target.value})}
+                    placeholder="Search or select company"
+                    className="pr-10 border border-gray-300 rounded-md"
+                    required
                   />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <Label htmlFor="companyAmount">Amount *</Label>
-                    <Input
-                      id="companyAmount"
-                      type="number"
-                      step="0.01"
-                      value={companyFormData.amount}
-                      onChange={(e) => setCompanyFormData({...companyFormData, amount: parseFloat(e.target.value) || 0})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="companyQuantity">Quantity</Label>
-                    <Input
-                      id="companyQuantity"
-                      type="number"
-                      value={companyFormData.quantity}
-                      onChange={(e) => setCompanyFormData({...companyFormData, quantity: parseInt(e.target.value) || 1})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="companyPaymentMode">Payment Mode *</Label>
-                    <Select value={companyFormData.payment_mode} onValueChange={(value) => setCompanyFormData({...companyFormData, payment_mode: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select payment mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Cash">Cash</SelectItem>
-                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                        <SelectItem value="Online">Online</SelectItem>
-                        <SelectItem value="Check">Check</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="companyType">Transaction Type</Label>
-                    <Select value={companyFormData.type} onValueChange={(value: 'credit' | 'debit') => setCompanyFormData({...companyFormData, type: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="credit">Credit (+)</SelectItem>
-                        <SelectItem value="debit">Debit (-)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700 block mb-2">Type</Label>
+                <div className="flex space-x-2">
+                  <Button
+                    type="button"
+                    variant={companyFormData.type === 'credit' ? 'default' : 'outline'}
+                    onClick={() => setCompanyFormData({...companyFormData, type: 'credit'})}
+                    className={`flex-1 ${companyFormData.type === 'credit' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                  >
+                    Credit (+)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={companyFormData.type === 'debit' ? 'default' : 'outline'}
+                    onClick={() => setCompanyFormData({...companyFormData, type: 'debit'})}
+                    className={`flex-1 ${companyFormData.type === 'debit' ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                  >
+                    Debit (-)
+                  </Button>
                 </div>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="companyBillId">Bill ID</Label>
-                    <Input
-                      id="companyBillId"
-                      value={companyFormData.bill_id}
-                      onChange={(e) => setCompanyFormData({...companyFormData, bill_id: e.target.value})}
-                      placeholder="Enter bill ID (optional)"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="companyDescription">Purchase Description</Label>
-                    <Input
-                      id="companyDescription"
-                      value={companyFormData.purchase_description}
-                      onChange={(e) => setCompanyFormData({...companyFormData, purchase_description: e.target.value})}
-                      placeholder="Enter description"
-                    />
-                  </div>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="companyAmount" className="text-sm font-medium text-gray-700 block mb-2">Amount</Label>
+                <Input
+                  id="companyAmount"
+                  type="number"
+                  step="0.01"
+                  value={companyFormData.amount}
+                  onChange={(e) => setCompanyFormData({...companyFormData, amount: parseFloat(e.target.value) || 0})}
+                  className="border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="companyQuantity" className="text-sm font-medium text-gray-700 block mb-2">Quantity</Label>
+                <Input
+                  id="companyQuantity"
+                  type="number"
+                  value={companyFormData.quantity}
+                  onChange={(e) => setCompanyFormData({...companyFormData, quantity: parseInt(e.target.value) || 1})}
+                  className="border border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <Label htmlFor="companyPaymentMode" className="text-sm font-medium text-gray-700 block mb-2">Payment Mode</Label>
+                <Select value={companyFormData.payment_mode} onValueChange={(value) => setCompanyFormData({...companyFormData, payment_mode: value})}>
+                  <SelectTrigger className="border border-gray-300 rounded-md">
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="Check">Check</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="companyDate" className="text-sm font-medium text-gray-700 block mb-2">Date</Label>
+                <Input
+                  id="companyDate"
+                  type="date"
+                  value={new Date().toISOString().split('T')[0]}
+                  className="border border-gray-300 rounded-md"
+                  readOnly
+                />
+              </div>
+            </div>
 
-                <div>
-                  <Label htmlFor="companyNotes">Additional Notes</Label>
-                  <Textarea
-                    id="companyNotes"
-                    value={companyFormData.additional_notes}
-                    onChange={(e) => setCompanyFormData({...companyFormData, additional_notes: e.target.value})}
-                    placeholder="Enter additional notes (optional)"
-                    rows={3}
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="companyContact" className="text-sm font-medium text-gray-700 block mb-2">Contact Number</Label>
+                <Input
+                  id="companyContact"
+                  value={companyFormData.contact_number}
+                  onChange={(e) => setCompanyFormData({...companyFormData, contact_number: e.target.value})}
+                  placeholder="Enter contact number"
+                  className="border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="companyBillId" className="text-sm font-medium text-gray-700 block mb-2">Bill ID (Optional)</Label>
+                <Input
+                  id="companyBillId"
+                  value={companyFormData.bill_id}
+                  onChange={(e) => setCompanyFormData({...companyFormData, bill_id: e.target.value})}
+                  placeholder="Enter bill ID"
+                  className="border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
 
-                <Button type="submit" className="w-full" disabled={state.isLoading}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {state.isLoading ? 'Adding...' : 'Add Company Transaction'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <div>
+              <Label htmlFor="companyDescription" className="text-sm font-medium text-gray-700 block mb-2">Purchase Description</Label>
+              <Input
+                id="companyDescription"
+                value={companyFormData.purchase_description}
+                onChange={(e) => setCompanyFormData({...companyFormData, purchase_description: e.target.value})}
+                placeholder="Enter description"
+                className="border border-gray-300 rounded-md"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="companyNotes" className="text-sm font-medium text-gray-700 block mb-2">Additional Notes (Optional)</Label>
+              <Textarea
+                id="companyNotes"
+                value={companyFormData.additional_notes}
+                onChange={(e) => setCompanyFormData({...companyFormData, additional_notes: e.target.value})}
+                placeholder="Enter additional notes"
+                rows={3}
+                className="border border-gray-300 rounded-md"
+              />
+            </div>
+
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white" disabled={state.isLoading}>
+              <Plus className="h-4 w-4 mr-2" />
+              {state.isLoading ? 'Adding...' : 'Add Transaction'}
+            </Button>
+          </form>
         </TabsContent>
       </Tabs>
     </div>
