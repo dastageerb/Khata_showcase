@@ -11,6 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ArrowLeft, Plus, User, Trash2, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import EditCustomerDialog from '@/components/dialogs/EditCustomerDialog';
+import EditTransactionDialog from '@/components/dialogs/EditTransactionDialog';
 
 interface CustomerDetailPageProps {
   customerId: string;
@@ -25,6 +27,9 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
   const customerTransactions = state.customerTransactions.filter(t => t.customer_id === customerId);
   
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
+  const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
+  const [isEditTransactionDialogOpen, setIsEditTransactionDialogOpen] = useState(false);
+  const [editTransaction, setEditTransaction] = useState(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     quantity: 1,
@@ -43,6 +48,27 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
       </div>
     );
   }
+
+  const handleUpdateCustomer = (updatedCustomer) => {
+    dispatch({ type: 'UPDATE_CUSTOMER', payload: updatedCustomer });
+    toast({
+      title: "Customer Updated",
+      description: "Customer information has been updated successfully",
+    });
+  };
+
+  const handleUpdateTransaction = (updatedTransaction) => {
+    dispatch({ type: 'UPDATE_CUSTOMER_TRANSACTION', payload: updatedTransaction });
+    toast({
+      title: "Transaction Updated",
+      description: "Transaction has been updated successfully",
+    });
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditTransaction(transaction);
+    setIsEditTransactionDialogOpen(true);
+  };
 
   const handleDeleteCustomer = () => {
     dispatch({ type: 'DELETE_CUSTOMER', payload: customerId });
@@ -198,6 +224,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                 variant="ghost"
                 className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
                 title="Edit"
+                onClick={() => setIsEditCustomerDialogOpen(true)}
               >
                 <Edit className="h-5 w-5" />
               </Button>
@@ -308,6 +335,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                           variant="ghost"
                           className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
                           title="Edit Transaction"
+                          onClick={() => handleEditTransaction(transaction)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -411,6 +439,25 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <EditCustomerDialog
+        customer={customer}
+        isOpen={isEditCustomerDialogOpen}
+        onClose={() => setIsEditCustomerDialogOpen(false)}
+        onUpdate={handleUpdateCustomer}
+      />
+
+      {/* Edit Transaction Dialog */}
+      <EditTransactionDialog
+        transaction={editTransaction}
+        isOpen={isEditTransactionDialogOpen}
+        onClose={() => {
+          setIsEditTransactionDialogOpen(false);
+          setEditTransaction(null);
+        }}
+        onUpdate={handleUpdateTransaction}
+      />
     </div>
   );
 };

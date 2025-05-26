@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
@@ -25,9 +25,10 @@ import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Bill, BillItem } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
+import EditBillItemDialog from '@/components/dialogs/EditBillItemDialog';
 
 const BillingHistoryPage: React.FC = () => {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState<{
@@ -43,6 +44,8 @@ const BillingHistoryPage: React.FC = () => {
   const [expandedBills, setExpandedBills] = useState<Record<string, boolean>>({});
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [editBillItem, setEditBillItem] = useState<BillItem | null>(null);
+  const [isEditItemDialogOpen, setIsEditItemDialogOpen] = useState(false);
   
   // Filter and sort bills
   useEffect(() => {
@@ -147,6 +150,27 @@ const BillingHistoryPage: React.FC = () => {
     groupedBills[dateKey].push(bill);
   });
   
+  const handleUpdateBillItem = (updatedItem: BillItem) => {
+    dispatch({ type: 'UPDATE_BILL_ITEM', payload: updatedItem });
+    toast({
+      title: "Item Updated",
+      description: "Bill item has been updated successfully",
+    });
+  };
+
+  const handleDeleteBillItem = (itemId: string) => {
+    dispatch({ type: 'DELETE_BILL_ITEM', payload: itemId });
+    toast({
+      title: "Item Deleted",
+      description: "Bill item has been deleted successfully",
+    });
+  };
+
+  const handleEditBillItem = (item: BillItem) => {
+    setEditBillItem(item);
+    setIsEditItemDialogOpen(true);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -307,16 +331,38 @@ const BillingHistoryPage: React.FC = () => {
                                         size="sm"
                                         variant="ghost"
                                         className="p-1 h-6 w-6"
+                                        onClick={() => handleEditBillItem(item)}
                                       >
                                         <Edit className="h-3 w-3" />
                                       </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="p-1 h-6 w-6 text-red-600"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="p-1 h-6 w-6 text-red-600"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete Bill Item</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              Are you sure you want to delete "{item.product_name}"? This action cannot be undone.
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction 
+                                              onClick={() => handleDeleteBillItem(item.id)}
+                                              className="bg-red-600 hover:bg-red-700"
+                                            >
+                                              Delete
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
                                     </div>
                                   </div>
                                 </div>
@@ -531,6 +577,17 @@ const BillingHistoryPage: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Edit Bill Item Dialog */}
+      <EditBillItemDialog
+        billItem={editBillItem}
+        isOpen={isEditItemDialogOpen}
+        onClose={() => {
+          setIsEditItemDialogOpen(false);
+          setEditBillItem(null);
+        }}
+        onUpdate={handleUpdateBillItem}
+      />
     </div>
   );
 };

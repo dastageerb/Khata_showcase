@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
 // Types
@@ -306,11 +305,15 @@ type AppAction =
   | { type: 'UPDATE_COMPANY'; payload: Company }
   | { type: 'DELETE_COMPANY'; payload: string }
   | { type: 'ADD_CUSTOMER_TRANSACTION'; payload: Transaction }
+  | { type: 'UPDATE_CUSTOMER_TRANSACTION'; payload: Transaction }
   | { type: 'DELETE_CUSTOMER_TRANSACTION'; payload: string }
   | { type: 'ADD_COMPANY_TRANSACTION'; payload: Transaction }
+  | { type: 'UPDATE_COMPANY_TRANSACTION'; payload: Transaction }
   | { type: 'DELETE_COMPANY_TRANSACTION'; payload: string }
   | { type: 'ADD_BILL'; payload: Bill }
   | { type: 'ADD_BILL_ITEM'; payload: BillItem }
+  | { type: 'UPDATE_BILL_ITEM'; payload: BillItem }
+  | { type: 'DELETE_BILL_ITEM'; payload: string }
   | { type: 'ADD_PRODUCT'; payload: Product }
   | { type: 'UPDATE_SETTINGS'; payload: Settings };
 
@@ -356,6 +359,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         ...state,
         customerTransactions: [...state.customerTransactions, action.payload]
       };
+    case 'UPDATE_CUSTOMER_TRANSACTION':
+      return {
+        ...state,
+        customerTransactions: state.customerTransactions.map(t => 
+          t.id === action.payload.id ? action.payload : t
+        )
+      };
     case 'DELETE_CUSTOMER_TRANSACTION':
       return {
         ...state,
@@ -366,6 +376,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         ...state,
         companyTransactions: [...state.companyTransactions, action.payload]
       };
+    case 'UPDATE_COMPANY_TRANSACTION':
+      return {
+        ...state,
+        companyTransactions: state.companyTransactions.map(t => 
+          t.id === action.payload.id ? action.payload : t
+        )
+      };
     case 'DELETE_COMPANY_TRANSACTION':
       return {
         ...state,
@@ -375,6 +392,18 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, bills: [...state.bills, action.payload] };
     case 'ADD_BILL_ITEM':
       return { ...state, billItems: [...state.billItems, action.payload] };
+    case 'UPDATE_BILL_ITEM':
+      return {
+        ...state,
+        billItems: state.billItems.map(item => 
+          item.id === action.payload.id ? action.payload : item
+        )
+      };
+    case 'DELETE_BILL_ITEM':
+      return {
+        ...state,
+        billItems: state.billItems.filter(item => item.id !== action.payload)
+      };
     case 'ADD_PRODUCT':
       return { ...state, products: [...state.products, action.payload] };
     case 'UPDATE_SETTINGS':

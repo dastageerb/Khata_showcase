@@ -11,6 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ArrowLeft, Plus, Building, Trash2, Edit } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import EditCompanyDialog from '@/components/dialogs/EditCompanyDialog';
+import EditTransactionDialog from '@/components/dialogs/EditTransactionDialog';
 
 interface CompanyDetailPageProps {
   companyId: string;
@@ -25,6 +27,9 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
   const companyTransactions = state.companyTransactions.filter(t => t.company_id === companyId);
   
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
+  const [isEditCompanyDialogOpen, setIsEditCompanyDialogOpen] = useState(false);
+  const [isEditTransactionDialogOpen, setIsEditTransactionDialogOpen] = useState(false);
+  const [editTransaction, setEditTransaction] = useState(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     quantity: 1,
@@ -43,6 +48,27 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
       </div>
     );
   }
+
+  const handleUpdateCompany = (updatedCompany) => {
+    dispatch({ type: 'UPDATE_COMPANY', payload: updatedCompany });
+    toast({
+      title: "Company Updated",
+      description: "Company information has been updated successfully",
+    });
+  };
+
+  const handleUpdateTransaction = (updatedTransaction) => {
+    dispatch({ type: 'UPDATE_COMPANY_TRANSACTION', payload: updatedTransaction });
+    toast({
+      title: "Transaction Updated",
+      description: "Transaction has been updated successfully",
+    });
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditTransaction(transaction);
+    setIsEditTransactionDialogOpen(true);
+  };
 
   const handleDeleteCompany = () => {
     dispatch({ type: 'DELETE_COMPANY', payload: companyId });
@@ -197,6 +223,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
                 variant="ghost"
                 className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
                 title="Edit"
+                onClick={() => setIsEditCompanyDialogOpen(true)}
               >
                 <Edit className="h-5 w-5" />
               </Button>
@@ -307,6 +334,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
                           variant="ghost"
                           className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
                           title="Edit Transaction"
+                          onClick={() => handleEditTransaction(transaction)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -410,6 +438,25 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Company Dialog */}
+      <EditCompanyDialog
+        company={company}
+        isOpen={isEditCompanyDialogOpen}
+        onClose={() => setIsEditCompanyDialogOpen(false)}
+        onUpdate={handleUpdateCompany}
+      />
+
+      {/* Edit Transaction Dialog */}
+      <EditTransactionDialog
+        transaction={editTransaction}
+        isOpen={isEditTransactionDialogOpen}
+        onClose={() => {
+          setIsEditTransactionDialogOpen(false);
+          setEditTransaction(null);
+        }}
+        onUpdate={handleUpdateTransaction}
+      />
     </div>
   );
 };
