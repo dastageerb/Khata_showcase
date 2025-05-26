@@ -1,280 +1,331 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { TrendingUp, DollarSign, Users, Building, ShoppingCart } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { CalendarIcon, Receipt, DollarSign, ShoppingCart, Package } from 'lucide-react';
-import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { format, subDays, isAfter, isBefore } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, getYear, getMonth } from 'date-fns';
 
 const SalesPage: React.FC = () => {
   const { state } = useApp();
-  const [timeFilter, setTimeFilter] = useState('Daily');
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-    from: subDays(new Date(), 7),
-    to: new Date()
-  });
+  const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
-  // Calculate sales data based on bills
-  const filteredBills = state.bills.filter(bill => {
-    const billDate = new Date(bill.date);
-    return isAfter(billDate, dateRange.from) && isBefore(billDate, dateRange.to);
-  });
+  // Get all transactions
+  const allTransactions = [
+    ...state.customerTransactions,
+    ...state.companyTransactions
+  ];
 
-  const totalRevenue = filteredBills.reduce((sum, bill) => sum + bill.total_amount, 0);
-  const totalBills = filteredBills.length;
-  const avgBillValue = totalBills > 0 ? totalRevenue / totalBills : 0;
-  const totalItemsSold = state.billItems
-    .filter(item => filteredBills.some(bill => bill.id === item.bill_id))
-    .reduce((sum, item) => sum + item.quantity, 0);
-
-  // Top selling products
-  const productSales: Record<string, { quantity: number; revenue: number }> = {};
-  
-  state.billItems.forEach(item => {
-    const bill = filteredBills.find(bill => bill.id === item.bill_id);
-    if (bill) {
-      if (!productSales[item.product_name]) {
-        productSales[item.product_name] = { quantity: 0, revenue: 0 };
-      }
-      productSales[item.product_name].quantity += item.quantity;
-      productSales[item.product_name].revenue += item.amount;
-    }
-  });
-
-  const topProducts = Object.entries(productSales)
-    .map(([name, data]) => ({ name, ...data }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 4);
-
-  // Daily sales data for chart
-  const dailySalesData = [];
-  for (let i = 6; i >= 0; i--) {
-    const date = subDays(new Date(), i);
-    const dateKey = format(date, 'yyyy-MM-dd');
-    const dayBills = state.bills.filter(bill => 
-      format(new Date(bill.date), 'yyyy-MM-dd') === dateKey
-    );
-    const dayRevenue = dayBills.reduce((sum, bill) => sum + bill.total_amount, 0);
-    
-    dailySalesData.push({
-      date: format(date, 'MMM dd'),
-      sales: dayRevenue
+  // Get available years with data
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    allTransactions.forEach(transaction => {
+      years.add(getYear(new Date(transaction.date)));
     });
-  }
+    return Array.from(years).sort((a, b) => b - a);
+  }, [allTransactions]);
 
-  // Mock growth data (in real app, compare with previous period)
-  const revenueGrowth = 15.2;
-  const unitsSoldGrowth = 10.5;
-  const newCustomers = 25;
+  // Get months for current year
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
-  const handleTimeFilterChange = (filter: string) => {
-    setTimeFilter(filter);
-    const today = new Date();
+  // Filter transactions based on selected filter
+  const filteredTransactions = useMemo(() => {
+    const now = new Date();
     
-    switch (filter) {
-      case 'Daily':
-        setDateRange({ from: subDays(today, 1), to: today });
-        break;
-      case 'Weekly':
-        setDateRange({ from: subDays(today, 7), to: today });
-        break;
-      case 'Monthly':
-        setDateRange({ from: subDays(today, 30), to: today });
-        break;
-      case 'Yearly':
-        setDateRange({ from: subDays(today, 365), to: today });
-        break;
-      default:
-        setDateRange({ from: subDays(today, 7), to: today });
+    return allTransactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      
+      switch (filterType) {
+        case 'daily':
+          return format(transactionDate, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd');
+        case 'weekly':
+          return transactionDate >= startOfWeek(now) && transactionDate <= endOfWeek(now);
+        case 'monthly':
+          if (selectedMonth !== null) {
+            return getYear(transactionDate) === selectedYear && getMonth(transactionDate) === selectedMonth;
+          }
+          return transactionDate >= startOfMonth(now) && transactionDate <= endOfMonth(now);
+        case 'yearly':
+          return getYear(transactionDate) === selectedYear;
+        default:
+          return true;
+      }
+    });
+  }, [allTransactions, filterType, selectedMonth, selectedYear]);
+
+  // Calculate statistics
+  const totalRevenue = filteredTransactions
+    .filter(t => t.type === 'credit')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalExpenses = filteredTransactions
+    .filter(t => t.type === 'debit')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalCustomers = new Set(
+    filteredTransactions
+      .filter(t => 'customer_id' in t)
+      .map(t => (t as any).customer_id)
+  ).size;
+
+  const totalCompanies = new Set(
+    filteredTransactions
+      .filter(t => 'company_id' in t)
+      .map(t => (t as any).company_id)
+  ).size;
+
+  // Chart data
+  const chartData = useMemo(() => {
+    const dataMap = new Map<string, { date: string; revenue: number; expenses: number }>();
+    
+    filteredTransactions.forEach(transaction => {
+      let key: string;
+      if (filterType === 'daily') {
+        key = format(new Date(transaction.date), 'HH:mm');
+      } else if (filterType === 'weekly') {
+        key = format(new Date(transaction.date), 'EEE');
+      } else if (filterType === 'monthly') {
+        key = format(new Date(transaction.date), 'dd');
+      } else {
+        key = format(new Date(transaction.date), 'MMM');
+      }
+
+      if (!dataMap.has(key)) {
+        dataMap.set(key, { date: key, revenue: 0, expenses: 0 });
+      }
+
+      const data = dataMap.get(key)!;
+      if (transaction.type === 'credit') {
+        data.revenue += transaction.amount;
+      } else {
+        data.expenses += transaction.amount;
+      }
+    });
+
+    return Array.from(dataMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [filteredTransactions, filterType]);
+
+  const handleFilterChange = (type: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
+    setFilterType(type);
+    setSelectedMonth(null);
+    if (type === 'yearly' && availableYears.length > 0) {
+      setSelectedYear(availableYears[0]);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sales Dashboard</h1>
-          <p className="text-gray-600 mt-1">Track and analyze your sales performance.</p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            {['Daily', 'Weekly', 'Monthly', 'Yearly'].map((filter) => (
-              <Button
-                key={filter}
-                variant={timeFilter === filter ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handleTimeFilterChange(filter)}
-                className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                  timeFilter === filter
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white'
-                }`}
-              >
-                {filter}
-              </Button>
-            ))}
-          </div>
-          
-          <Button variant="outline" className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4" />
-            Select Date Range
-          </Button>
-        </div>
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900">Sales Analytics</h1>
+        <p className="text-gray-600 mt-2">Track your business performance</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sales Overview Card */}
-        <Card className="lg:row-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-700">Sales Overview</CardTitle>
-            <p className="text-sm text-gray-500">Daily Sales</p>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center space-y-4">
-            <div className="relative w-32 h-32">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[{ value: 75 }, { value: 25 }]}
-                    cx="50%"
-                    cy="50%"
-                    startAngle={90}
-                    endAngle={450}
-                    innerRadius={40}
-                    outerRadius={60}
-                    dataKey="value"
-                  >
-                    <Cell fill="#3B82F6" />
-                    <Cell fill="#E5E7EB" />
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-gray-900">
-                Rs {totalRevenue.toLocaleString()}
-              </p>
-              <p className="text-gray-500">Total Sales</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Key Statistics */}
-        <div className="lg:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Receipt className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 mb-1">Total Bills</p>
-              <p className="text-3xl font-bold text-gray-900">{totalBills}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <DollarSign className="h-8 w-8 text-green-600 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 mb-1">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">Rs {totalRevenue.toLocaleString()}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <ShoppingCart className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 mb-1">Avg. Bill Value</p>
-              <p className="text-2xl font-bold text-gray-900">Rs {avgBillValue.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Package className="h-8 w-8 text-orange-600 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 mb-1">Items Sold</p>
-              <p className="text-3xl font-bold text-gray-900">{totalItemsSold}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Selling Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-700">Top Selling Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 text-sm font-medium text-gray-500 border-b pb-2">
-                <span>PRODUCT NAME</span>
-                <span className="text-center">UNITS SOLD</span>
-                <span className="text-right">REVENUE</span>
-              </div>
-              
-              {topProducts.map((product, index) => (
-                <div key={product.name} className="grid grid-cols-3 gap-4 text-sm py-2">
-                  <span className="text-gray-900 font-medium">{product.name}</span>
-                  <span className="text-center text-gray-700">{product.quantity}</span>
-                  <span className="text-right text-gray-900 font-medium">
-                    Rs {product.revenue.toLocaleString()}
-                  </span>
-                </div>
+      {/* Filter Controls */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="space-y-4">
+            {/* Main Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((type) => (
+                <Button
+                  key={type}
+                  variant={filterType === type ? 'default' : 'outline'}
+                  onClick={() => handleFilterChange(type)}
+                  className="capitalize"
+                >
+                  {type}
+                </Button>
               ))}
-              
-              {topProducts.length === 0 && (
-                <p className="text-center text-gray-500 py-4">No sales data available</p>
-              )}
+            </div>
+
+            {/* Month Selection for Monthly Filter */}
+            {filterType === 'monthly' && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Select Month ({selectedYear}):</p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {monthNames.map((month, index) => (
+                    <Button
+                      key={month}
+                      variant={selectedMonth === index ? 'default' : 'outline'}
+                      onClick={() => setSelectedMonth(index)}
+                      className="text-xs px-2 py-1 h-auto"
+                    >
+                      {month.slice(0, 3)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Year Selection for Yearly Filter */}
+            {filterType === 'yearly' && availableYears.length > 1 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Select Year:</p>
+                <div className="flex flex-wrap gap-2">
+                  {availableYears.map((year) => (
+                    <Button
+                      key={year}
+                      variant={selectedYear === year ? 'default' : 'outline'}
+                      onClick={() => setSelectedYear(year)}
+                      className="text-sm"
+                    >
+                      {year}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-green-600">
+                  PKR {totalRevenue.toLocaleString()}
+                </p>
+              </div>
+              <DollarSign className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Sales Growth */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg text-gray-700">Sales Growth</CardTitle>
-            <p className="text-sm text-gray-500">Compared to previous period</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">Revenue Growth</span>
-                <span className="text-sm font-medium text-green-600">+{revenueGrowth}%</span>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
+                <p className="text-2xl font-bold text-red-600">
+                  PKR {totalExpenses.toLocaleString()}
+                </p>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(revenueGrowth * 2, 100)}%` }}
-                />
-              </div>
+              <TrendingUp className="h-8 w-8 text-red-600" />
             </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">Units Sold Growth</span>
-                <span className="text-sm font-medium text-green-600">+{unitsSoldGrowth}%</span>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Customers</p>
+                <p className="text-2xl font-bold text-blue-600">{totalCustomers}</p>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(unitsSoldGrowth * 2, 100)}%` }}
-                />
-              </div>
+              <Users className="h-8 w-8 text-blue-600" />
             </div>
-            
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">New Customers</span>
-                <span className="text-sm font-medium text-blue-600">+{newCustomers}</span>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Companies</p>
+                <p className="text-2xl font-bold text-purple-600">{totalCompanies}</p>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(newCustomers * 2, 100)}%` }}
-                />
-              </div>
+              <Building className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Revenue vs Expenses Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Revenue vs Expenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    `PKR ${Number(value).toLocaleString()}`,
+                    name === 'revenue' ? 'Revenue' : 'Expenses'
+                  ]}
+                />
+                <Bar dataKey="revenue" fill="#22c55e" name="revenue" />
+                <Bar dataKey="expenses" fill="#ef4444" name="expenses" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sales Growth Trend */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Sales Growth Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, 'Revenue']}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#22c55e" 
+                  strokeWidth={3}
+                  dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Transaction Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <ShoppingCart className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <p className="text-lg font-semibold text-green-600">
+                {filteredTransactions.filter(t => t.type === 'credit').length}
+              </p>
+              <p className="text-sm text-gray-600">Credit Transactions</p>
+            </div>
+            <div className="text-center p-4 bg-red-50 rounded-lg">
+              <TrendingUp className="h-8 w-8 text-red-600 mx-auto mb-2" />
+              <p className="text-lg font-semibold text-red-600">
+                {filteredTransactions.filter(t => t.type === 'debit').length}
+              </p>
+              <p className="text-sm text-gray-600">Debit Transactions</p>
+            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <DollarSign className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <p className="text-lg font-semibold text-blue-600">
+                PKR {(totalRevenue - totalExpenses).toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-600">Net Profit</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
