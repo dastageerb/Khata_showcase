@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,10 +70,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
             onClick={handleTitleClick}
             className="cursor-pointer select-none transition-all duration-300 hover:scale-105"
           >
-            <h1 className="text-3xl font-bold text-primary animate-pulse-glow">
-              Financial Management Portal
+            <h1 className="text-3xl font-bold text-primary">
+              Al Mehran Radiator
             </h1>
-            <p className="text-sm text-gray-500 mt-2">Al Mehran Radiator</p>
+            <p className="text-sm text-gray-500 mt-2">Financial Management Portal</p>
           </div>
           {titleClickCount > 0 && titleClickCount < 5 && (
             <div className="flex justify-center space-x-1">
