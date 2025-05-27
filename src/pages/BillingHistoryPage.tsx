@@ -26,6 +26,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Bill, BillItem } from '@/context/AppContext';
 import { cn } from '@/lib/utils';
 import EditBillItemDialog from '@/components/dialogs/EditBillItemDialog';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const BillingHistoryPage: React.FC = () => {
   const { state, dispatch } = useApp();
@@ -46,6 +49,12 @@ const BillingHistoryPage: React.FC = () => {
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
   const [editBillItem, setEditBillItem] = useState<BillItem | null>(null);
   const [isEditItemDialogOpen, setIsEditItemDialogOpen] = useState(false);
+  
+  // Calculate bill total from its items
+  const calculateBillTotal = (billId: string) => {
+    const billItems = state.billItems.filter(item => item.bill_id === billId);
+    return billItems.reduce((sum, item) => sum + item.amount, 0);
+  };
   
   // Filter and sort bills
   useEffect(() => {
@@ -94,25 +103,48 @@ const BillingHistoryPage: React.FC = () => {
   };
   
   const handleExportData = () => {
-    // Simulate exporting data as CSV
-    const csvHeader = 'Serial No,Customer,Date,Total Amount,Status\n';
+    // Create workbook with multiple sheets
+    const workbook = XLSX.utils.book_new();
     
-    const csvRows = bills.map(bill => {
-      const date = format(new Date(bill.date), 'yyyy-MM-dd');
-      const customerName = bill.customer_name.replace(/,/g, ';'); // Replace commas to avoid CSV issues
-      
-      return `${bill.serial_no},"${customerName}",${date},${bill.total_amount},${bill.status}`;
-    }).join('\n');
+    // Bills data
+    const billsData = bills.map(bill => ({
+      'Serial No': bill.serial_no,
+      'Customer': bill.customer_name,
+      'Date': format(new Date(bill.date), 'yyyy-MM-dd'),
+      'Total Amount': calculateBillTotal(bill.id),
+      'Status': bill.status,
+      'Created': format(new Date(bill.created_at), 'yyyy-MM-dd HH:mm'),
+      'Updated': format(new Date(bill.updated_at), 'yyyy-MM-dd HH:mm')
+    }));
     
-    const csvContent = csvHeader + csvRows;
+    const billsWorksheet = XLSX.utils.json_to_sheet(billsData);
+    XLSX.utils.book_append_sheet(workbook, billsWorksheet, 'Bills');
     
-    // In a real app, we would create a download link
-    // For this prototype, we'll just show a toast notification
-    console.log('CSV Export:', csvContent);
+    // Bill items data
+    const billItemsData = state.billItems
+      .filter(item => bills.some(bill => bill.id === item.bill_id))
+      .map(item => {
+        const bill = bills.find(b => b.id === item.bill_id);
+        return {
+          'Bill Serial': bill?.serial_no || '',
+          'Customer': bill?.customer_name || '',
+          'Product': item.product_name,
+          'Quantity': item.quantity,
+          'Price': item.price,
+          'Amount': item.amount,
+          'Date': bill ? format(new Date(bill.date), 'yyyy-MM-dd') : ''
+        };
+      });
+    
+    const itemsWorksheet = XLSX.utils.json_to_sheet(billItemsData);
+    XLSX.utils.book_append_sheet(workbook, itemsWorksheet, 'Bill Items');
+    
+    // Download the file
+    XLSX.writeFile(workbook, `billing-history-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     
     toast({
-      title: "Export Simulated",
-      description: `${bills.length} bills exported (see console for data)`,
+      title: "Export Complete",
+      description: `Billing history exported successfully`,
     });
   };
   
@@ -126,6 +158,52 @@ const BillingHistoryPage: React.FC = () => {
   const handlePrintBill = (bill: Bill) => {
     setSelectedBill(bill);
     setIsPrintDialogOpen(true);
+  };
+  
+  const handleDownloadPDF = async (bill: Bill) => {
+    const printElement = document.getElementById('bill-print-content');
+    if (!printElement) return;
+    
+    try {
+      const canvas = await html2canvas(printElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const imgWidth = 190;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      
+      let position = 10;
+      
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(`bill-${bill.serial_no}.pdf`);
+      
+      toast({
+        title: "PDF Downloaded",
+        description: `Bill ${bill.serial_no} downloaded as PDF`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   const getBillItems = (billId: string) => {
@@ -152,6 +230,20 @@ const BillingHistoryPage: React.FC = () => {
   
   const handleUpdateBillItem = (updatedItem: BillItem) => {
     dispatch({ type: 'UPDATE_BILL_ITEM', payload: updatedItem });
+    
+    // Update the bill total amount
+    const bill = state.bills.find(b => b.id === updatedItem.bill_id);
+    if (bill) {
+      const newTotal = calculateBillTotal(updatedItem.bill_id);
+      const updatedBill = {
+        ...bill,
+        total_amount: newTotal,
+        updated_at: new Date(),
+        updated_by: state.currentUser?.id || 'system'
+      };
+      dispatch({ type: 'UPDATE_BILL', payload: updatedBill });
+    }
+    
     toast({
       title: "Item Updated",
       description: "Bill item has been updated successfully",
@@ -159,7 +251,24 @@ const BillingHistoryPage: React.FC = () => {
   };
 
   const handleDeleteBillItem = (itemId: string) => {
+    const item = state.billItems.find(i => i.id === itemId);
+    if (!item) return;
+    
     dispatch({ type: 'DELETE_BILL_ITEM', payload: itemId });
+    
+    // Update the bill total amount
+    const bill = state.bills.find(b => b.id === item.bill_id);
+    if (bill) {
+      const newTotal = calculateBillTotal(item.bill_id);
+      const updatedBill = {
+        ...bill,
+        total_amount: newTotal,
+        updated_at: new Date(),
+        updated_by: state.currentUser?.id || 'system'
+      };
+      dispatch({ type: 'UPDATE_BILL', payload: updatedBill });
+    }
+    
     toast({
       title: "Item Deleted",
       description: "Bill item has been deleted successfully",
@@ -169,6 +278,12 @@ const BillingHistoryPage: React.FC = () => {
   const handleEditBillItem = (item: BillItem) => {
     setEditBillItem(item);
     setIsEditItemDialogOpen(true);
+  };
+
+  // Check if bill has been edited (items modified after bill creation)
+  const isBillEdited = (bill: Bill) => {
+    const billItems = getBillItems(bill.id);
+    return billItems.some(item => item.updated_at.getTime() > bill.created_at.getTime());
   };
 
   return (
@@ -200,7 +315,7 @@ const BillingHistoryPage: React.FC = () => {
           
           <Button onClick={handleExportData} variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Export Excel
           </Button>
         </div>
       </div>
@@ -220,161 +335,168 @@ const BillingHistoryPage: React.FC = () => {
             </h3>
             
             <div className="space-y-4">
-              {dateBills.map((bill) => (
-                <Card key={bill.id} className="transition-all hover:shadow-sm">
-                  <CardContent className="p-0">
-                    <div className="p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-semibold">{bill.serial_no}</span>
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              bill.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                              {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
-                            </span>
-                            {bill.created_at.getTime() !== bill.updated_at.getTime() && (
-                              <span className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 flex items-center">
-                                <Edit className="h-3 w-3 mr-1" />
-                                Edited
+              {dateBills.map((bill) => {
+                const currentTotal = calculateBillTotal(bill.id);
+                const isEdited = isBillEdited(bill);
+                
+                return (
+                  <Card key={bill.id} className="transition-all hover:shadow-sm">
+                    <CardContent className="p-0">
+                      <div className="p-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-semibold">{bill.serial_no}</span>
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                bill.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
                               </span>
-                            )}
+                              {isEdited && (
+                                <span className="text-xs px-2 py-1 rounded bg-orange-100 text-orange-700 flex items-center">
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Edited
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {format(new Date(bill.date), 'h:mm a')} • Customer: <span className="font-semibold">{bill.customer_name}</span>
+                            </p>
+                            <div className="text-xs text-gray-400 mt-1">
+                              Created: {format(new Date(bill.created_at), 'MMM d, yyyy h:mm a')}
+                              {bill.created_at.getTime() !== bill.updated_at.getTime() && (
+                                <span className="ml-2">
+                                  Updated: {format(new Date(bill.updated_at), 'MMM d, yyyy h:mm a')}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {format(new Date(bill.date), 'h:mm a')} • Customer: <span className="font-semibold">{bill.customer_name}</span>
-                          </p>
-                          <div className="text-xs text-gray-400 mt-1">
-                            Created: {format(new Date(bill.created_at), 'MMM d, yyyy h:mm a')}
-                            {bill.created_at.getTime() !== bill.updated_at.getTime() && (
-                              <span className="ml-2">
-                                Updated: {format(new Date(bill.updated_at), 'MMM d, yyyy h:mm a')}
-                              </span>
-                            )}
+                          
+                          <div className="text-right">
+                            <p className="font-bold text-primary">
+                              {new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'PKR',
+                                currencyDisplay: 'narrowSymbol'
+                              }).format(currentTotal)}
+                            </p>
+                            <div className="flex space-x-1 mt-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => toggleBillExpand(bill.id)}
+                                className="text-xs h-8"
+                              >
+                                {expandedBills[bill.id] ? (
+                                  <><ChevronUp className="h-3 w-3 mr-1" />Hide items</>
+                                ) : (
+                                  <><ChevronDown className="h-3 w-3 mr-1" />Show items</>
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-xs h-8"
+                              >
+                                <Edit className="h-3 w-3 mr-1" />Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handlePrintBill(bill)}
+                                className="text-xs h-8"
+                              >
+                                <Printer className="h-3 w-3 mr-1" />Print
+                              </Button>
+                            </div>
                           </div>
                         </div>
                         
-                        <div className="text-right">
-                          <p className="font-bold text-primary">
-                            {new Intl.NumberFormat('en-US', { 
-                              style: 'currency', 
-                              currency: 'PKR',
-                              currencyDisplay: 'narrowSymbol'
-                            }).format(bill.total_amount)}
-                          </p>
-                          <div className="flex space-x-1 mt-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => toggleBillExpand(bill.id)}
-                              className="text-xs h-8"
-                            >
-                              {expandedBills[bill.id] ? (
-                                <><ChevronUp className="h-3 w-3 mr-1" />Hide items</>
-                              ) : (
-                                <><ChevronDown className="h-3 w-3 mr-1" />Show items</>
-                              )}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-xs h-8"
-                            >
-                              <Edit className="h-3 w-3 mr-1" />Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handlePrintBill(bill)}
-                              className="text-xs h-8"
-                            >
-                              <Printer className="h-3 w-3 mr-1" />Print
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {expandedBills[bill.id] && (
-                        <div className="mt-4 border-t pt-4">
-                          <div className="space-y-2">
-                            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
-                              <div className="col-span-5">Item</div>
-                              <div className="col-span-2 text-center">Qty</div>
-                              <div className="col-span-2 text-right">Rate</div>
-                              <div className="col-span-2 text-right">Amount</div>
-                              <div className="col-span-1 text-center">Actions</div>
-                            </div>
-                            
-                            <Separator />
-                            
+                        {expandedBills[bill.id] && (
+                          <div className="mt-4 border-t pt-4">
                             <div className="space-y-2">
-                              {getBillItems(bill.id).map((item: BillItem) => (
-                                <div key={item.id} className="grid grid-cols-12 gap-2 text-sm">
-                                  <div className="col-span-5">{item.product_name}</div>
-                                  <div className="col-span-2 text-center">{item.quantity}</div>
-                                  <div className="col-span-2 text-right">
-                                    {new Intl.NumberFormat('en-US', { 
-                                      style: 'currency', 
-                                      currency: 'PKR',
-                                      currencyDisplay: 'narrowSymbol'
-                                    }).format(item.price)}
-                                  </div>
-                                  <div className="col-span-2 text-right">
-                                    {new Intl.NumberFormat('en-US', { 
-                                      style: 'currency', 
-                                      currency: 'PKR',
-                                      currencyDisplay: 'narrowSymbol'
-                                    }).format(item.amount)}
-                                  </div>
-                                  <div className="col-span-1 text-center">
-                                    <div className="flex space-x-1 justify-center">
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="p-1 h-6 w-6"
-                                        onClick={() => handleEditBillItem(item)}
-                                      >
-                                        <Edit className="h-3 w-3" />
-                                      </Button>
-                                      <AlertDialog>
-                                        <AlertDialogTrigger asChild>
+                              <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
+                                <div className="col-span-5">Item</div>
+                                <div className="col-span-2 text-center">Qty</div>
+                                <div className="col-span-2 text-right">Rate</div>
+                                <div className="col-span-2 text-right">Amount</div>
+                                <div className="col-span-1 text-center">Actions</div>
+                              </div>
+                              
+                              <Separator />
+                              
+                              <div className="overflow-x-auto">
+                                <div className="space-y-2 min-w-[600px]">
+                                  {getBillItems(bill.id).map((item: BillItem) => (
+                                    <div key={item.id} className="grid grid-cols-12 gap-2 text-sm">
+                                      <div className="col-span-5">{item.product_name}</div>
+                                      <div className="col-span-2 text-center">{item.quantity}</div>
+                                      <div className="col-span-2 text-right">
+                                        {new Intl.NumberFormat('en-US', { 
+                                          style: 'currency', 
+                                          currency: 'PKR',
+                                          currencyDisplay: 'narrowSymbol'
+                                        }).format(item.price)}
+                                      </div>
+                                      <div className="col-span-2 text-right">
+                                        {new Intl.NumberFormat('en-US', { 
+                                          style: 'currency', 
+                                          currency: 'PKR',
+                                          currencyDisplay: 'narrowSymbol'
+                                        }).format(item.amount)}
+                                      </div>
+                                      <div className="col-span-1 text-center">
+                                        <div className="flex space-x-1 justify-center">
                                           <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="p-1 h-6 w-6 text-red-600"
+                                            className="p-1 h-6 w-6"
+                                            onClick={() => handleEditBillItem(item)}
                                           >
-                                            <Trash2 className="h-3 w-3" />
+                                            <Edit className="h-3 w-3" />
                                           </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                          <AlertDialogHeader>
-                                            <AlertDialogTitle>Delete Bill Item</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                              Are you sure you want to delete "{item.product_name}"? This action cannot be undone.
-                                            </AlertDialogDescription>
-                                          </AlertDialogHeader>
-                                          <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction 
-                                              onClick={() => handleDeleteBillItem(item.id)}
-                                              className="bg-red-600 hover:bg-red-700"
-                                            >
-                                              Delete
-                                            </AlertDialogAction>
-                                          </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                      </AlertDialog>
+                                          <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="p-1 h-6 w-6 text-red-600"
+                                              >
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                              <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Bill Item</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                  Are you sure you want to delete "{item.product_name}"? This action cannot be undone.
+                                                </AlertDialogDescription>
+                                              </AlertDialogHeader>
+                                              <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction 
+                                                  onClick={() => handleDeleteBillItem(item.id)}
+                                                  className="bg-red-600 hover:bg-red-700"
+                                                >
+                                                  Delete
+                                                </AlertDialogAction>
+                                              </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                          </AlertDialog>
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
+                                  ))}
                                 </div>
-                              ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         ))
@@ -486,13 +608,23 @@ const BillingHistoryPage: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Bill Preview</span>
-              <Button variant="outline" size="sm">
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm">
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => selectedBill && handleDownloadPDF(selectedBill)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF
+                </Button>
+              </div>
             </DialogTitle>
           </DialogHeader>
-          <div className="border rounded-lg p-6 space-y-6">
+          <div id="bill-print-content" className="border rounded-lg p-6 space-y-6">
             {selectedBill && (
               <>
                 <div className="text-center space-y-1">
@@ -563,7 +695,7 @@ const BillingHistoryPage: React.FC = () => {
                         style: 'currency', 
                         currency: 'PKR',
                         currencyDisplay: 'narrowSymbol'
-                      }).format(selectedBill.total_amount)}
+                      }).format(calculateBillTotal(selectedBill.id))}
                     </div>
                   </div>
                 </div>
