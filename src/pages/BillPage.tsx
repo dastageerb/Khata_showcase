@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X, Plus, Printer, Save } from 'lucide-react';
+import { X, Plus, Printer, Save, Minus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface BillItem {
@@ -82,6 +81,16 @@ const BillPage: React.FC = () => {
 
   const handleRemoveItem = (id: string) => {
     setBillItems(billItems.filter(item => item.id !== id));
+  };
+
+  const handleUpdateItemQuantity = (id: string, newQuantity: number) => {
+    if (newQuantity <= 0) return;
+    
+    setBillItems(billItems.map(item => 
+      item.id === id 
+        ? { ...item, quantity: newQuantity, amount: newQuantity * item.price }
+        : item
+    ));
   };
 
   const calculateTotal = () => {
@@ -367,8 +376,27 @@ const BillPage: React.FC = () => {
                             <td className="px-4 py-3 whitespace-nowrap">
                               <div className="text-sm font-medium text-gray-900">{item.product_name}</div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-center text-sm">
-                              {item.quantity}
+                            <td className="px-4 py-3 whitespace-nowrap text-center">
+                              <div className="flex items-center justify-center space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUpdateItemQuantity(item.id, item.quantity - 1)}
+                                  className="h-6 w-6 p-0"
+                                  disabled={item.quantity <= 1}
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="text-sm min-w-[2rem] text-center">{item.quantity}</span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleUpdateItemQuantity(item.id, item.quantity + 1)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                               {new Intl.NumberFormat('en-US', { 

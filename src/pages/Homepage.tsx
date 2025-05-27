@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Combobox } from '@/components/ui/combobox';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, User, Plus, Search } from 'lucide-react';
+import { Building, User, Plus } from 'lucide-react';
 
 const Homepage: React.FC = () => {
   const { state, dispatch, generateId, addHistoryEntry } = useApp();
@@ -43,6 +44,43 @@ const Homepage: React.FC = () => {
     amount: 0,
     type: 'credit' as 'credit' | 'debit'
   });
+
+  // Customer options for combobox
+  const customerOptions = state.customers.map(customer => ({
+    value: customer.id,
+    label: customer.name
+  }));
+
+  // Company options for combobox
+  const companyOptions = state.companies.map(company => ({
+    value: company.id,
+    label: company.name
+  }));
+
+  const handleCustomerSelect = (customerId: string) => {
+    const customer = state.customers.find(c => c.id === customerId);
+    if (customer) {
+      setCustomerFormData({
+        ...customerFormData,
+        name: customer.name,
+        phone: customer.phone,
+        nic_number: customer.nic_number || '',
+        address: customer.address || ''
+      });
+    }
+  };
+
+  const handleCompanySelect = (companyId: string) => {
+    const company = state.companies.find(c => c.id === companyId);
+    if (company) {
+      setCompanyFormData({
+        ...companyFormData,
+        name: company.name,
+        contact_number: company.contact_number,
+        address: company.address || ''
+      });
+    }
+  };
 
   const handleCustomerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -257,17 +295,21 @@ const Homepage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="customerName" className="text-sm font-medium text-gray-700 block mb-2">Customer Name</Label>
-                <div className="relative">
+                <Combobox
+                  options={customerOptions}
+                  value={state.customers.find(c => c.name === customerFormData.name)?.id || ''}
+                  onValueChange={handleCustomerSelect}
+                  placeholder="Search or select customer"
+                  className="w-full"
+                />
+                {customerFormData.name && !state.customers.find(c => c.name === customerFormData.name) && (
                   <Input
-                    id="customerName"
                     value={customerFormData.name}
                     onChange={(e) => setCustomerFormData({...customerFormData, name: e.target.value})}
-                    placeholder="Search or select customer"
-                    className="pr-10 border border-gray-300 rounded-md"
-                    required
+                    placeholder="Enter new customer name"
+                    className="mt-2 border border-gray-300 rounded-md"
                   />
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                </div>
+                )}
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-700 block mb-2">Type</Label>
@@ -400,17 +442,21 @@ const Homepage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="companyName" className="text-sm font-medium text-gray-700 block mb-2">Company Name</Label>
-                <div className="relative">
+                <Combobox
+                  options={companyOptions}
+                  value={state.companies.find(c => c.name === companyFormData.name)?.id || ''}
+                  onValueChange={handleCompanySelect}
+                  placeholder="Search or select company"
+                  className="w-full"
+                />
+                {companyFormData.name && !state.companies.find(c => c.name === companyFormData.name) && (
                   <Input
-                    id="companyName"
                     value={companyFormData.name}
                     onChange={(e) => setCompanyFormData({...companyFormData, name: e.target.value})}
-                    placeholder="Search or select company"
-                    className="pr-10 border border-gray-300 rounded-md"
-                    required
+                    placeholder="Enter new company name"
+                    className="mt-2 border border-gray-300 rounded-md"
                   />
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                </div>
+                )}
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-700 block mb-2">Type</Label>
