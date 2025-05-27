@@ -246,35 +246,36 @@ const BillPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 font-inter">
       <div>
-        <h1 className="text-2xl font-bold">Create New Bill</h1>
-        <p className="text-gray-500">Generate a new bill for a customer</p>
+        <h1 className="text-2xl font-bold font-inter">Create New Bill</h1>
+        <p className="text-gray-500 font-inter">Generate a new bill for a customer</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="space-y-6 lg:col-span-2">
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
+              <CardTitle className="font-inter">Customer Information</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="space-y-2 relative">
-                  <Label htmlFor="customer">Customer Name</Label>
+                  <Label htmlFor="customer" className="font-inter">Customer Name</Label>
                   <Input
                     id="customer"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Type customer name..."
                     onFocus={() => customerName && setShowCustomerSuggestions(customerSuggestions.length > 0)}
+                    className="rounded-xl font-inter"
                   />
                   {showCustomerSuggestions && (
-                    <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
                       {customerSuggestions.map((customer) => (
                         <div
                           key={customer.id}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer font-inter"
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.name}</div>
@@ -288,25 +289,26 @@ const BillPage: React.FC = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader>
-              <CardTitle>Bill Items</CardTitle>
+              <CardTitle className="font-inter">Bill Items</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="grid grid-cols-12 gap-2">
                   <div className="col-span-12 sm:col-span-5">
-                    <Label htmlFor="product" className="mb-2 block">Product Name</Label>
+                    <Label htmlFor="product" className="mb-2 block font-inter">Product Name</Label>
                     <Input
                       id="product"
                       value={currentItem.product_name}
                       onChange={(e) => setCurrentItem({...currentItem, product_name: e.target.value})}
                       placeholder="Enter product name..."
+                      className="rounded-xl font-inter"
                     />
                   </div>
                   
                   <div className="col-span-4 sm:col-span-2">
-                    <Label htmlFor="quantity" className="mb-2 block">Qty</Label>
+                    <Label htmlFor="quantity" className="mb-2 block font-inter">Qty</Label>
                     <Input
                       id="quantity"
                       type="number"
@@ -316,11 +318,12 @@ const BillPage: React.FC = () => {
                         ...currentItem,
                         quantity: parseInt(e.target.value) || 0
                       })}
+                      className="rounded-xl font-inter"
                     />
                   </div>
                   
                   <div className="col-span-8 sm:col-span-3">
-                    <Label htmlFor="price" className="mb-2 block">Unit Price</Label>
+                    <Label htmlFor="price" className="mb-2 block font-inter">Unit Price</Label>
                     <Input
                       id="price"
                       type="number"
@@ -331,12 +334,13 @@ const BillPage: React.FC = () => {
                         ...currentItem,
                         price: parseFloat(e.target.value) || 0
                       })}
+                      className="rounded-xl font-inter"
                     />
                   </div>
                   
                   <div className="col-span-12 sm:col-span-2 pt-6 sm:pt-0">
-                    <Label className="hidden sm:block mb-2">&nbsp;</Label>
-                    <Button onClick={handleAddItem} className="w-full bg-primary hover:bg-primary/90">
+                    <Label className="hidden sm:block mb-2 font-inter">&nbsp;</Label>
+                    <Button onClick={handleAddItem} className="w-full bg-primary hover:bg-primary/90 rounded-xl font-inter">
                       <Plus className="h-4 w-4 mr-2" />
                       Add
                     </Button>
@@ -344,119 +348,121 @@ const BillPage: React.FC = () => {
                 </div>
                 
                 {billItems.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">No items added to this bill yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Add products using the form above</p>
+                  <div className="text-center py-8 bg-gray-50 rounded-2xl">
+                    <p className="text-gray-500 font-inter">No items added to this bill yet</p>
+                    <p className="text-sm text-gray-400 mt-1 font-inter">Add products using the form above</p>
                   </div>
                 ) : (
-                  <div className="border rounded-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Product
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Qty
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Price
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {billItems.map((item, index) => (
-                          <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{item.product_name}</div>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-center">
-                              <div className="flex items-center justify-center space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleUpdateItemQuantity(item.id, item.quantity - 1)}
-                                  className="h-6 w-6 p-0"
-                                  disabled={item.quantity <= 1}
-                                >
-                                  <Minus className="h-3 w-3" />
-                                </Button>
-                                <span className="text-sm min-w-[2rem] text-center">{item.quantity}</span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleUpdateItemQuantity(item.id, item.quantity + 1)}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
-                              {new Intl.NumberFormat('en-US', { 
-                                style: 'currency', 
-                                currency: 'PKR',
-                                currencyDisplay: 'narrowSymbol'
-                              }).format(item.price)}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                              {new Intl.NumberFormat('en-US', { 
-                                style: 'currency', 
-                                currency: 'PKR',
-                                currencyDisplay: 'narrowSymbol'
-                              }).format(item.amount)}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleRemoveItem(item.id)}
-                                className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </td>
+                  <div className="border rounded-2xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-inter">
+                              Product
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-inter">
+                              Qty
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider font-inter">
+                              Price
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider font-inter">
+                              Amount
+                            </th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider font-inter">
+                              Action
+                            </th>
                           </tr>
-                        ))}
-                        <tr className="bg-gray-100">
-                          <td colSpan={3} className="px-4 py-4 whitespace-nowrap text-right font-bold">
-                            Total Amount:
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-right font-bold">
-                            {new Intl.NumberFormat('en-US', { 
-                              style: 'currency', 
-                              currency: 'PKR',
-                              currencyDisplay: 'narrowSymbol'
-                            }).format(calculateTotal())}
-                          </td>
-                          <td></td>
-                        </tr>
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {billItems.map((item, index) => (
+                            <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <div className="text-sm font-medium text-gray-900 font-inter">{item.product_name}</div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-center">
+                                <div className="flex items-center justify-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUpdateItemQuantity(item.id, item.quantity - 1)}
+                                    className="h-6 w-6 p-0 rounded-lg"
+                                    disabled={item.quantity <= 1}
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="text-sm min-w-[2rem] text-center font-inter">{item.quantity}</span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUpdateItemQuantity(item.id, item.quantity + 1)}
+                                    className="h-6 w-6 p-0 rounded-lg"
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-inter">
+                                {new Intl.NumberFormat('en-US', { 
+                                  style: 'currency', 
+                                  currency: 'PKR',
+                                  currencyDisplay: 'narrowSymbol'
+                                }).format(item.price)}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium font-inter">
+                                {new Intl.NumberFormat('en-US', { 
+                                  style: 'currency', 
+                                  currency: 'PKR',
+                                  currencyDisplay: 'narrowSymbol'
+                                }).format(item.amount)}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-right">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleRemoveItem(item.id)}
+                                  className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                          <tr className="bg-gray-100">
+                            <td colSpan={3} className="px-4 py-4 whitespace-nowrap text-right font-bold font-inter">
+                              Total Amount:
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap text-right font-bold font-inter">
+                              {new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'PKR',
+                                currencyDisplay: 'narrowSymbol'
+                              }).format(calculateTotal())}
+                            </td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
                 
                 <div className="pt-4 flex justify-end">
                   <Button 
                     onClick={handleGenerateBill}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-primary hover:bg-primary/90 rounded-xl font-inter"
                     disabled={state.isLoading || billItems.length === 0}
                   >
                     {state.isLoading ? (
                       <div className="flex items-center space-x-2">
                         <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                        <span>Generating...</span>
+                        <span className="font-inter">Generating...</span>
                       </div>
                     ) : (
                       <>
                         <Save className="h-4 w-4 mr-2" />
-                        Generate Bill
+                        <span className="font-inter">Generate Bill</span>
                       </>
                     )}
                   </Button>
@@ -466,34 +472,34 @@ const BillPage: React.FC = () => {
           </Card>
         </div>
         
-        <Card className="h-fit sticky top-20">
+        <Card className="h-fit sticky top-20 rounded-2xl">
           <CardHeader>
-            <CardTitle>Shop Information</CardTitle>
+            <CardTitle className="font-inter">Shop Information</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">Shop Name</p>
-                <p className="font-semibold">{state.settings.shop_name}</p>
+                <p className="text-sm font-medium text-gray-500 font-inter">Shop Name</p>
+                <p className="font-semibold font-inter">{state.settings.shop_name}</p>
               </div>
               
               <div>
-                <p className="text-sm font-medium text-gray-500">Address</p>
-                <p>{state.settings.shop_address}</p>
+                <p className="text-sm font-medium text-gray-500 font-inter">Address</p>
+                <p className="font-inter">{state.settings.shop_address}</p>
               </div>
               
               <div>
-                <p className="text-sm font-medium text-gray-500">Contact</p>
-                <p>{state.settings.admin_phone}</p>
+                <p className="text-sm font-medium text-gray-500 font-inter">Contact</p>
+                <p className="font-inter">{state.settings.admin_phone}</p>
               </div>
               
               <div>
-                <p className="text-sm font-medium text-gray-500">Last Bill Number</p>
-                <p>AMR-{state.settings.last_bill_serial}</p>
+                <p className="text-sm font-medium text-gray-500 font-inter">Last Bill Number</p>
+                <p className="font-inter">AMR-{state.settings.last_bill_serial}</p>
               </div>
               
               <div className="pt-2">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 font-inter">
                   The next bill will be numbered AMR-{state.settings.last_bill_serial + 1}
                 </p>
               </div>
@@ -504,46 +510,46 @@ const BillPage: React.FC = () => {
       
       {/* Print Dialog */}
       <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-xl rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
+            <DialogTitle className="flex items-center justify-between font-inter">
               <span>Bill Preview</span>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="rounded-xl font-inter">
                 <Printer className="h-4 w-4 mr-2" />
                 Print
               </Button>
             </DialogTitle>
           </DialogHeader>
-          <div className="border rounded-lg p-6 space-y-6">
+          <div className="border rounded-2xl p-6 space-y-6">
             {generatedBill && (
               <>
                 <div className="text-center space-y-1">
-                  <h2 className="text-xl font-bold">{state.settings.shop_name}</h2>
-                  <p className="text-sm">{state.settings.shop_address}</p>
-                  <p className="text-sm">Contact: {state.settings.admin_phone}</p>
+                  <h2 className="text-xl font-bold font-inter">{state.settings.shop_name}</h2>
+                  <p className="text-sm font-inter">{state.settings.shop_address}</p>
+                  <p className="text-sm font-inter">Contact: {state.settings.admin_phone}</p>
                 </div>
                 
                 <Separator />
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Bill #:</p>
-                    <p className="font-semibold">{generatedBill.serial_no}</p>
+                    <p className="text-sm font-medium text-gray-500 font-inter">Bill #:</p>
+                    <p className="font-semibold font-inter">{generatedBill.serial_no}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-500">Date:</p>
-                    <p>{new Date(generatedBill.date).toLocaleDateString()}</p>
+                    <p className="text-sm font-medium text-gray-500 font-inter">Date:</p>
+                    <p className="font-inter">{new Date(generatedBill.date).toLocaleDateString()}</p>
                   </div>
                 </div>
                 
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500">Customer:</p>
-                  <p className="font-semibold">{generatedBill.customerName}</p>
+                  <p className="text-sm font-medium text-gray-500 font-inter">Customer:</p>
+                  <p className="font-semibold font-inter">{generatedBill.customerName}</p>
                   {generatedBill.customerPhone && (
-                    <p className="text-sm">{generatedBill.customerPhone}</p>
+                    <p className="text-sm font-inter">{generatedBill.customerPhone}</p>
                   )}
                   {generatedBill.customerAddress && (
-                    <p className="text-sm">{generatedBill.customerAddress}</p>
+                    <p className="text-sm font-inter">{generatedBill.customerAddress}</p>
                   )}
                 </div>
                 
@@ -551,10 +557,10 @@ const BillPage: React.FC = () => {
                 
                 <div className="space-y-2">
                   <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-500">
-                    <div className="col-span-5">Item</div>
-                    <div className="col-span-2 text-center">Qty</div>
-                    <div className="col-span-2 text-right">Rate</div>
-                    <div className="col-span-3 text-right">Amount</div>
+                    <div className="col-span-5 font-inter">Item</div>
+                    <div className="col-span-2 text-center font-inter">Qty</div>
+                    <div className="col-span-2 text-right font-inter">Rate</div>
+                    <div className="col-span-3 text-right font-inter">Amount</div>
                   </div>
                   
                   <Separator />
@@ -562,16 +568,16 @@ const BillPage: React.FC = () => {
                   <div className="space-y-2">
                     {generatedBill.items.map((item: any, index: number) => (
                       <div key={index} className="grid grid-cols-12 gap-2 text-sm">
-                        <div className="col-span-5">{item.product_name}</div>
-                        <div className="col-span-2 text-center">{item.quantity}</div>
-                        <div className="col-span-2 text-right">
+                        <div className="col-span-5 font-inter">{item.product_name}</div>
+                        <div className="col-span-2 text-center font-inter">{item.quantity}</div>
+                        <div className="col-span-2 text-right font-inter">
                           {new Intl.NumberFormat('en-US', { 
                             style: 'currency', 
                             currency: 'PKR',
                             currencyDisplay: 'narrowSymbol'
                           }).format(item.price)}
                         </div>
-                        <div className="col-span-3 text-right">
+                        <div className="col-span-3 text-right font-inter">
                           {new Intl.NumberFormat('en-US', { 
                             style: 'currency', 
                             currency: 'PKR',
@@ -585,8 +591,8 @@ const BillPage: React.FC = () => {
                   <Separator />
                   
                   <div className="grid grid-cols-12 gap-2 font-bold">
-                    <div className="col-span-9 text-right">Total:</div>
-                    <div className="col-span-3 text-right">
+                    <div className="col-span-9 text-right font-inter">Total:</div>
+                    <div className="col-span-3 text-right font-inter">
                       {new Intl.NumberFormat('en-US', { 
                         style: 'currency', 
                         currency: 'PKR',
@@ -597,8 +603,8 @@ const BillPage: React.FC = () => {
                 </div>
                 
                 <div className="text-center pt-6 space-y-1 text-sm">
-                  <p>Thank you for your business!</p>
-                  <p>For any inquiries, please contact us at {state.settings.admin_phone}</p>
+                  <p className="font-inter">Thank you for your business!</p>
+                  <p className="font-inter">For any inquiries, please contact us at {state.settings.admin_phone}</p>
                 </div>
               </>
             )}

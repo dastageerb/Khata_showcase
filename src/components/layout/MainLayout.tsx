@@ -70,7 +70,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans">
+    <div className="min-h-screen bg-gray-50 flex font-inter">
       <FloatingNavigation 
         currentPath={currentPath}
         onNavigate={(path) => handleNavigate(path)}
@@ -81,17 +81,17 @@ const MainLayout: React.FC = () => {
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-primary tracking-tight font-inter">
                 {state.settings.shop_name}
               </h1>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded-lg">
+              <div className="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded-xl">
                 <User className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-gray-700 hidden sm:block">{state.currentUser?.name}</span>
+                <span className="text-sm font-semibold text-gray-700 hidden sm:block font-inter">{state.currentUser?.name}</span>
               </div>
-              <Button variant="outline" onClick={handleLogout} size="sm" className="font-medium">
+              <Button variant="outline" onClick={handleLogout} size="sm" className="font-medium rounded-xl font-inter">
                 <LogOut className="w-4 h-4 mr-2" />
                 <span className="hidden sm:block">Logout</span>
               </Button>

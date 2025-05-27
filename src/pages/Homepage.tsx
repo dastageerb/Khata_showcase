@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ const Homepage: React.FC = () => {
     nic_number: '',
     address: '',
     quantity: 1,
-    payment_mode: '',
+    payment_mode: 'Cash',
     bill_id: '',
     purchase_description: '',
     additional_notes: '',
@@ -37,7 +36,7 @@ const Homepage: React.FC = () => {
     contact_number: '',
     address: '',
     quantity: 1,
-    payment_mode: '',
+    payment_mode: 'Cash',
     bill_id: '',
     purchase_description: '',
     additional_notes: '',
@@ -167,7 +166,7 @@ const Homepage: React.FC = () => {
         nic_number: '',
         address: '',
         quantity: 1,
-        payment_mode: '',
+        payment_mode: 'Cash',
         bill_id: '',
         purchase_description: '',
         additional_notes: '',
@@ -262,7 +261,7 @@ const Homepage: React.FC = () => {
         contact_number: '',
         address: '',
         quantity: 1,
-        payment_mode: '',
+        payment_mode: 'Cash',
         bill_id: '',
         purchase_description: '',
         additional_notes: '',
@@ -275,16 +274,16 @@ const Homepage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg">
-      <h1 className="text-xl font-bold text-center text-primary mb-6">Add New Transaction</h1>
+    <div className="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-lg font-inter">
+      <h1 className="text-xl font-bold text-center text-primary mb-6 font-inter">Add New Transaction</h1>
       
       <Tabs defaultValue="customer" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="customer" className="flex items-center space-x-2">
+        <TabsList className="grid w-full grid-cols-2 rounded-xl">
+          <TabsTrigger value="customer" className="flex items-center space-x-2 rounded-lg font-inter">
             <User className="h-4 w-4" />
             <span>Customer Transaction</span>
           </TabsTrigger>
-          <TabsTrigger value="company" className="flex items-center space-x-2">
+          <TabsTrigger value="company" className="flex items-center space-x-2 rounded-lg font-inter">
             <Building className="h-4 w-4" />
             <span>Company Transaction</span>
           </TabsTrigger>
@@ -294,31 +293,31 @@ const Homepage: React.FC = () => {
           <form onSubmit={handleCustomerSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="customerName" className="text-sm font-medium text-gray-700 block mb-2">Customer Name</Label>
+                <Label htmlFor="customerName" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Customer Name</Label>
                 <Combobox
                   options={customerOptions}
                   value={state.customers.find(c => c.name === customerFormData.name)?.id || ''}
                   onValueChange={handleCustomerSelect}
                   placeholder="Search or select customer"
-                  className="w-full"
+                  className="w-full rounded-xl"
                 />
                 {customerFormData.name && !state.customers.find(c => c.name === customerFormData.name) && (
                   <Input
                     value={customerFormData.name}
                     onChange={(e) => setCustomerFormData({...customerFormData, name: e.target.value})}
                     placeholder="Enter new customer name"
-                    className="mt-2 border border-gray-300 rounded-md"
+                    className="mt-2 border border-gray-300 rounded-xl font-inter"
                   />
                 )}
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-700 block mb-2">Type</Label>
+                <Label className="text-sm font-medium text-gray-700 block mb-2 font-inter">Type</Label>
                 <div className="flex space-x-2">
                   <Button
                     type="button"
                     variant={customerFormData.type === 'credit' ? 'default' : 'outline'}
                     onClick={() => setCustomerFormData({...customerFormData, type: 'credit'})}
-                    className={`flex-1 ${customerFormData.type === 'credit' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                    className={`flex-1 rounded-xl font-inter ${customerFormData.type === 'credit' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
                   >
                     Credit (+)
                   </Button>
@@ -326,7 +325,7 @@ const Homepage: React.FC = () => {
                     type="button"
                     variant={customerFormData.type === 'debit' ? 'default' : 'outline'}
                     onClick={() => setCustomerFormData({...customerFormData, type: 'debit'})}
-                    className={`flex-1 ${customerFormData.type === 'debit' ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                    className={`flex-1 rounded-xl font-inter ${customerFormData.type === 'debit' ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
                   >
                     Debit (-)
                   </Button>
@@ -334,103 +333,104 @@ const Homepage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
-                <Label htmlFor="customerAmount" className="text-sm font-medium text-gray-700 block mb-2">Amount</Label>
+                <Label htmlFor="customerAmount" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Amount</Label>
                 <Input
                   id="customerAmount"
                   type="number"
                   step="0.01"
                   value={customerFormData.amount}
                   onChange={(e) => setCustomerFormData({...customerFormData, amount: parseFloat(e.target.value) || 0})}
-                  className="border border-gray-300 rounded-md"
+                  className="border border-gray-300 rounded-xl font-inter"
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="customerQuantity" className="text-sm font-medium text-gray-700 block mb-2">Quantity</Label>
+                <Label htmlFor="customerQuantity" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Quantity</Label>
                 <Input
                   id="customerQuantity"
                   type="number"
                   value={customerFormData.quantity}
                   onChange={(e) => setCustomerFormData({...customerFormData, quantity: parseInt(e.target.value) || 1})}
-                  className="border border-gray-300 rounded-md"
+                  className="border border-gray-300 rounded-xl font-inter"
                 />
               </div>
               <div>
-                <Label htmlFor="customerPaymentMode" className="text-sm font-medium text-gray-700 block mb-2">Payment Mode</Label>
+                <Label htmlFor="customerPaymentMode" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Payment Mode</Label>
                 <Select value={customerFormData.payment_mode} onValueChange={(value) => setCustomerFormData({...customerFormData, payment_mode: value})}>
-                  <SelectTrigger className="border border-gray-300 rounded-md">
+                  <SelectTrigger className="border border-gray-300 rounded-xl font-inter">
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="Cash">Cash</SelectItem>
                     <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Online">Online</SelectItem>
-                    <SelectItem value="Check">Check</SelectItem>
+                    <SelectItem value="Cheque">Cheque</SelectItem>
+                    <SelectItem value="Card">Card</SelectItem>
+                    <SelectItem value="Raast">Raast</SelectItem>
+                    <SelectItem value="Easy Paisa">Easy Paisa</SelectItem>
+                    <SelectItem value="Jazzcash">Jazzcash</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="customerDate" className="text-sm font-medium text-gray-700 block mb-2">Date</Label>
-                <Input
-                  id="customerDate"
-                  type="date"
-                  value={new Date().toISOString().split('T')[0]}
-                  className="border border-gray-300 rounded-md"
-                  readOnly
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="customerPhone" className="text-sm font-medium text-gray-700 block mb-2">Phone Number</Label>
-                <Input
-                  id="customerPhone"
-                  value={customerFormData.phone}
-                  onChange={(e) => setCustomerFormData({...customerFormData, phone: e.target.value})}
-                  placeholder="Enter phone number"
-                  className="border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="customerBillId" className="text-sm font-medium text-gray-700 block mb-2">Bill ID (Optional)</Label>
+                <Label htmlFor="customerBillId" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Bill ID</Label>
                 <Input
                   id="customerBillId"
                   value={customerFormData.bill_id}
                   onChange={(e) => setCustomerFormData({...customerFormData, bill_id: e.target.value})}
                   placeholder="Enter bill ID"
-                  className="border border-gray-300 rounded-md"
+                  className="border border-gray-300 rounded-xl font-inter"
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerDate" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Date</Label>
+                <Input
+                  id="customerDate"
+                  type="date"
+                  value={new Date().toISOString().split('T')[0]}
+                  className="border border-gray-300 rounded-xl font-inter"
+                  readOnly
                 />
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="customerDescription" className="text-sm font-medium text-gray-700 block mb-2">Purchase Description</Label>
-              <Input
-                id="customerDescription"
-                value={customerFormData.purchase_description}
-                onChange={(e) => setCustomerFormData({...customerFormData, purchase_description: e.target.value})}
-                placeholder="Enter description"
-                className="border border-gray-300 rounded-md"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="customerPhone" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Contact</Label>
+                <Input
+                  id="customerPhone"
+                  value={customerFormData.phone}
+                  onChange={(e) => setCustomerFormData({...customerFormData, phone: e.target.value})}
+                  placeholder="Enter phone number"
+                  className="border border-gray-300 rounded-xl font-inter"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerDescription" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Purchase Description</Label>
+                <Input
+                  id="customerDescription"
+                  value={customerFormData.purchase_description}
+                  onChange={(e) => setCustomerFormData({...customerFormData, purchase_description: e.target.value})}
+                  placeholder="Enter description"
+                  className="border border-gray-300 rounded-xl font-inter"
+                />
+              </div>
+              <div>
+                <Label htmlFor="customerNotes" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Additional Notes</Label>
+                <Input
+                  id="customerNotes"
+                  value={customerFormData.additional_notes}
+                  onChange={(e) => setCustomerFormData({...customerFormData, additional_notes: e.target.value})}
+                  placeholder="Enter additional notes"
+                  className="border border-gray-300 rounded-xl font-inter"
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="customerNotes" className="text-sm font-medium text-gray-700 block mb-2">Additional Notes (Optional)</Label>
-              <Textarea
-                id="customerNotes"
-                value={customerFormData.additional_notes}
-                onChange={(e) => setCustomerFormData({...customerFormData, additional_notes: e.target.value})}
-                placeholder="Enter additional notes"
-                rows={3}
-                className="border border-gray-300 rounded-md"
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white" disabled={state.isLoading}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl font-inter" disabled={state.isLoading}>
               <Plus className="h-4 w-4 mr-2" />
               {state.isLoading ? 'Adding...' : 'Add Transaction'}
             </Button>
@@ -441,31 +441,31 @@ const Homepage: React.FC = () => {
           <form onSubmit={handleCompanySubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="companyName" className="text-sm font-medium text-gray-700 block mb-2">Company Name</Label>
+                <Label htmlFor="companyName" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Company Name</Label>
                 <Combobox
                   options={companyOptions}
                   value={state.companies.find(c => c.name === companyFormData.name)?.id || ''}
                   onValueChange={handleCompanySelect}
                   placeholder="Search or select company"
-                  className="w-full"
+                  className="w-full rounded-xl"
                 />
                 {companyFormData.name && !state.companies.find(c => c.name === companyFormData.name) && (
                   <Input
                     value={companyFormData.name}
                     onChange={(e) => setCompanyFormData({...companyFormData, name: e.target.value})}
                     placeholder="Enter new company name"
-                    className="mt-2 border border-gray-300 rounded-md"
+                    className="mt-2 border border-gray-300 rounded-xl font-inter"
                   />
                 )}
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-700 block mb-2">Type</Label>
+                <Label className="text-sm font-medium text-gray-700 block mb-2 font-inter">Type</Label>
                 <div className="flex space-x-2">
                   <Button
                     type="button"
                     variant={companyFormData.type === 'credit' ? 'default' : 'outline'}
                     onClick={() => setCompanyFormData({...companyFormData, type: 'credit'})}
-                    className={`flex-1 ${companyFormData.type === 'credit' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                    className={`flex-1 rounded-xl font-inter ${companyFormData.type === 'credit' ? 'bg-green-100 text-green-700 border-green-300 hover:bg-green-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
                   >
                     Credit (+)
                   </Button>
@@ -473,7 +473,7 @@ const Homepage: React.FC = () => {
                     type="button"
                     variant={companyFormData.type === 'debit' ? 'default' : 'outline'}
                     onClick={() => setCompanyFormData({...companyFormData, type: 'debit'})}
-                    className={`flex-1 ${companyFormData.type === 'debit' ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
+                    className={`flex-1 rounded-xl font-inter ${companyFormData.type === 'debit' ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200' : 'bg-gray-100 text-gray-700 border-gray-300'}`}
                   >
                     Debit (-)
                   </Button>
@@ -481,103 +481,104 @@ const Homepage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
-                <Label htmlFor="companyAmount" className="text-sm font-medium text-gray-700 block mb-2">Amount</Label>
+                <Label htmlFor="companyAmount" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Amount</Label>
                 <Input
                   id="companyAmount"
                   type="number"
                   step="0.01"
                   value={companyFormData.amount}
                   onChange={(e) => setCompanyFormData({...companyFormData, amount: parseFloat(e.target.value) || 0})}
-                  className="border border-gray-300 rounded-md"
+                  className="border border-gray-300 rounded-xl font-inter"
                   required
                 />
               </div>
               <div>
-                <Label htmlFor="companyQuantity" className="text-sm font-medium text-gray-700 block mb-2">Quantity</Label>
+                <Label htmlFor="companyQuantity" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Quantity</Label>
                 <Input
                   id="companyQuantity"
                   type="number"
                   value={companyFormData.quantity}
                   onChange={(e) => setCompanyFormData({...companyFormData, quantity: parseInt(e.target.value) || 1})}
-                  className="border border-gray-300 rounded-md"
+                  className="border border-gray-300 rounded-xl font-inter"
                 />
               </div>
               <div>
-                <Label htmlFor="companyPaymentMode" className="text-sm font-medium text-gray-700 block mb-2">Payment Mode</Label>
+                <Label htmlFor="companyPaymentMode" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Payment Mode</Label>
                 <Select value={companyFormData.payment_mode} onValueChange={(value) => setCompanyFormData({...companyFormData, payment_mode: value})}>
-                  <SelectTrigger className="border border-gray-300 rounded-md">
+                  <SelectTrigger className="border border-gray-300 rounded-xl font-inter">
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="Cash">Cash</SelectItem>
                     <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="Online">Online</SelectItem>
-                    <SelectItem value="Check">Check</SelectItem>
+                    <SelectItem value="Cheque">Cheque</SelectItem>
+                    <SelectItem value="Card">Card</SelectItem>
+                    <SelectItem value="Raast">Raast</SelectItem>
+                    <SelectItem value="Easy Paisa">Easy Paisa</SelectItem>
+                    <SelectItem value="Jazzcash">Jazzcash</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="companyDate" className="text-sm font-medium text-gray-700 block mb-2">Date</Label>
-                <Input
-                  id="companyDate"
-                  type="date"
-                  value={new Date().toISOString().split('T')[0]}
-                  className="border border-gray-300 rounded-md"
-                  readOnly
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="companyContact" className="text-sm font-medium text-gray-700 block mb-2">Contact Number</Label>
-                <Input
-                  id="companyContact"
-                  value={companyFormData.contact_number}
-                  onChange={(e) => setCompanyFormData({...companyFormData, contact_number: e.target.value})}
-                  placeholder="Enter contact number"
-                  className="border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="companyBillId" className="text-sm font-medium text-gray-700 block mb-2">Bill ID (Optional)</Label>
+                <Label htmlFor="companyBillId" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Bill ID</Label>
                 <Input
                   id="companyBillId"
                   value={companyFormData.bill_id}
                   onChange={(e) => setCompanyFormData({...companyFormData, bill_id: e.target.value})}
                   placeholder="Enter bill ID"
-                  className="border border-gray-300 rounded-md"
+                  className="border border-gray-300 rounded-xl font-inter"
+                />
+              </div>
+              <div>
+                <Label htmlFor="companyDate" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Date</Label>
+                <Input
+                  id="companyDate"
+                  type="date"
+                  value={new Date().toISOString().split('T')[0]}
+                  className="border border-gray-300 rounded-xl font-inter"
+                  readOnly
                 />
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="companyDescription" className="text-sm font-medium text-gray-700 block mb-2">Purchase Description</Label>
-              <Input
-                id="companyDescription"
-                value={companyFormData.purchase_description}
-                onChange={(e) => setCompanyFormData({...companyFormData, purchase_description: e.target.value})}
-                placeholder="Enter description"
-                className="border border-gray-300 rounded-md"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="companyContact" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Contact</Label>
+                <Input
+                  id="companyContact"
+                  value={companyFormData.contact_number}
+                  onChange={(e) => setCompanyFormData({...companyFormData, contact_number: e.target.value})}
+                  placeholder="Enter contact number"
+                  className="border border-gray-300 rounded-xl font-inter"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="companyDescription" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Purchase Description</Label>
+                <Input
+                  id="companyDescription"
+                  value={companyFormData.purchase_description}
+                  onChange={(e) => setCompanyFormData({...companyFormData, purchase_description: e.target.value})}
+                  placeholder="Enter description"
+                  className="border border-gray-300 rounded-xl font-inter"
+                />
+              </div>
+              <div>
+                <Label htmlFor="companyNotes" className="text-sm font-medium text-gray-700 block mb-2 font-inter">Additional Notes</Label>
+                <Input
+                  id="companyNotes"
+                  value={companyFormData.additional_notes}
+                  onChange={(e) => setCompanyFormData({...companyFormData, additional_notes: e.target.value})}
+                  placeholder="Enter additional notes"
+                  className="border border-gray-300 rounded-xl font-inter"
+                />
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="companyNotes" className="text-sm font-medium text-gray-700 block mb-2">Additional Notes (Optional)</Label>
-              <Textarea
-                id="companyNotes"
-                value={companyFormData.additional_notes}
-                onChange={(e) => setCompanyFormData({...companyFormData, additional_notes: e.target.value})}
-                placeholder="Enter additional notes"
-                rows={3}
-                className="border border-gray-300 rounded-md"
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white" disabled={state.isLoading}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl font-inter" disabled={state.isLoading}>
               <Plus className="h-4 w-4 mr-2" />
               {state.isLoading ? 'Adding...' : 'Add Transaction'}
             </Button>

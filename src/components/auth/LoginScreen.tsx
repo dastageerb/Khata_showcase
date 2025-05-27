@@ -64,93 +64,95 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 font-sans">
-      <Card className="w-full max-w-md shadow-xl animate-fade-in border-0">
-        <CardHeader className="text-center space-y-6 pb-8">
-          <div 
-            onClick={handleTitleClick}
-            className="cursor-pointer select-none transition-all duration-300 hover:scale-105"
-          >
-            <h1 className="text-4xl font-bold text-primary tracking-tight">
-              Al Mehran Radiator
-            </h1>
-            <p className="text-base text-gray-600 mt-3 font-medium">Financial Management Portal</p>
-          </div>
-          {titleClickCount > 0 && titleClickCount < 5 && (
-            <div className="flex justify-center space-x-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    i < titleClickCount ? 'bg-primary animate-bounce' : 'bg-gray-200'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-8 px-8 pb-8">
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@admin.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-12 text-base transition-all duration-300 focus:ring-2 focus:ring-primary border-gray-200"
-                />
-              </div>
-              <div className="space-y-3">
-                <Label htmlFor="password" className="text-sm font-semibold text-gray-700">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="admin"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-12 text-base transition-all duration-300 focus:ring-2 focus:ring-primary border-gray-200"
-                />
-              </div>
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full h-12 bg-primary hover:bg-primary/90 transition-all duration-300 transform hover:scale-[1.02] text-base font-semibold"
-              disabled={state.isLoading}
+    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 flex items-center justify-center p-4 font-inter">
+      <div className="w-full max-w-6xl mx-auto">
+        <Card className="w-full max-w-md mx-auto shadow-2xl animate-fade-in border-0 rounded-3xl">
+          <CardHeader className="text-center space-y-6 pb-8">
+            <div 
+              onClick={handleTitleClick}
+              className="cursor-pointer select-none transition-all duration-300 hover:scale-105"
             >
-              {state.isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                  <span>Signing In...</span>
+              <h1 className="text-4xl font-bold text-primary tracking-tight font-inter">
+                Al Mehran Radiator
+              </h1>
+              <p className="text-base text-gray-600 mt-3 font-medium font-inter">Financial Management Portal</p>
+            </div>
+            {titleClickCount > 0 && titleClickCount < 5 && (
+              <div className="flex justify-center space-x-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      i < titleClickCount ? 'bg-primary animate-bounce' : 'bg-gray-200'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-8 px-8 pb-8">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-5">
+                <div className="space-y-3">
+                  <Label htmlFor="email" className="text-sm font-semibold text-gray-700 font-inter">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="admin@admin.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-12 text-base transition-all duration-300 focus:ring-2 focus:ring-primary border-gray-200 rounded-xl font-inter"
+                  />
                 </div>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-          </form>
-          
-          <div className="text-center">
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <p className="text-sm font-medium text-gray-600 mb-3">Demo Credentials</p>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="text-left">
-                  <p className="font-semibold text-gray-700">Email:</p>
-                  <p className="font-mono text-primary">admin@admin.com</p>
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-gray-700">Password:</p>
-                  <p className="font-mono text-primary">admin</p>
+                <div className="space-y-3">
+                  <Label htmlFor="password" className="text-sm font-semibold text-gray-700 font-inter">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="admin"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-12 text-base transition-all duration-300 focus:ring-2 focus:ring-primary border-gray-200 rounded-xl font-inter"
+                  />
                 </div>
               </div>
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-primary hover:bg-primary/90 transition-all duration-300 transform hover:scale-[1.02] text-base font-semibold rounded-xl font-inter"
+                disabled={state.isLoading}
+              >
+                {state.isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span className="font-inter">Signing In...</span>
+                  </div>
+                ) : (
+                  <span className="font-inter">Sign In</span>
+                )}
+              </Button>
+            </form>
+            
+            <div className="text-center">
+              <div className="bg-gray-50 rounded-2xl p-4 mb-4">
+                <p className="text-sm font-medium text-gray-600 mb-3 font-inter">Demo Credentials</p>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-700 font-inter">Email:</p>
+                    <p className="font-mono text-primary">admin@admin.com</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-700 font-inter">Password:</p>
+                    <p className="font-mono text-primary">admin</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 font-inter">💡 Tip: Tap the title 5 times for signup!</p>
             </div>
-            <p className="text-xs text-gray-500">💡 Tip: Tap the title 5 times for signup!</p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
