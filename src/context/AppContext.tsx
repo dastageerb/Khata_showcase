@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
 // Types
@@ -395,7 +394,8 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
     case 'DELETE_BILL':
       return {
         ...state,
-        bills: state.bills.filter(bill => bill.id !== action.payload)
+        bills: state.bills.filter(bill => bill.id !== action.payload),
+        billItems: state.billItems.filter(item => item.bill_id !== action.payload)
       };
     case 'ADD_BILL_ITEM':
       return { ...state, billItems: [...state.billItems, action.payload] };

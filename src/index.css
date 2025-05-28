@@ -97,6 +97,48 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans text-sm;
+  }
+
+  /* Reduce base font sizes */
+  h1 {
+    @apply text-xl font-bold;
+  }
+
+  h2 {
+    @apply text-lg font-semibold;
+  }
+
+  h3 {
+    @apply text-base font-medium;
+  }
+
+  p {
+    @apply text-sm;
+  }
+
+  /* Reduce button sizes */
+  button {
+    @apply text-sm;
+  }
+
+  /* Reduce input and form element sizes */
+  input, textarea, select {
+    @apply text-sm;
+  }
+
+  /* Reduce table text */
+  table {
+    @apply text-sm;
+  }
+
+  /* Reduce card content */
+  .card {
+    @apply text-sm;
+  }
+
+  /* Reduce dialog and modal text */
+  .dialog-content {
+    @apply text-sm;
   }
 }
