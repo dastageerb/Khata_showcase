@@ -231,19 +231,6 @@ const BillingHistoryPage: React.FC = () => {
   const handleUpdateBillItem = (updatedItem: BillItem) => {
     dispatch({ type: 'UPDATE_BILL_ITEM', payload: updatedItem });
     
-    // Update the bill total amount
-    const bill = state.bills.find(b => b.id === updatedItem.bill_id);
-    if (bill) {
-      const newTotal = calculateBillTotal(updatedItem.bill_id);
-      const updatedBill = {
-        ...bill,
-        total_amount: newTotal,
-        updated_at: new Date(),
-        updated_by: state.currentUser?.id || 'system'
-      };
-      dispatch({ type: 'UPDATE_BILL', payload: updatedBill });
-    }
-    
     toast({
       title: "Item Updated",
       description: "Bill item has been updated successfully",
@@ -255,19 +242,6 @@ const BillingHistoryPage: React.FC = () => {
     if (!item) return;
     
     dispatch({ type: 'DELETE_BILL_ITEM', payload: itemId });
-    
-    // Update the bill total amount
-    const bill = state.bills.find(b => b.id === item.bill_id);
-    if (bill) {
-      const newTotal = calculateBillTotal(item.bill_id);
-      const updatedBill = {
-        ...bill,
-        total_amount: newTotal,
-        updated_at: new Date(),
-        updated_by: state.currentUser?.id || 'system'
-      };
-      dispatch({ type: 'UPDATE_BILL', payload: updatedBill });
-    }
     
     toast({
       title: "Item Deleted",
