@@ -15,8 +15,8 @@ const SettingsPage: React.FC = () => {
   
   const [formData, setFormData] = useState({
     shop_name: state.settings.shop_name,
-    shop_address: state.settings.shop_address,
-    admin_phone: state.settings.admin_phone,
+    shop_address: 'Near MCB bank Gaari khata, station road Hyderabad',
+    admin_phone: '022-2783373',
     last_bill_serial: state.settings.last_bill_serial
   });
   
@@ -30,17 +30,6 @@ const SettingsPage: React.FC = () => {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Pakistani phone number validation (simple version)
-    const phoneRegex = /^\+92-\d{3}-\d{7}$/;
-    if (!phoneRegex.test(formData.admin_phone)) {
-      toast({
-        title: "Invalid Phone Number",
-        description: "Phone number should be in format: +92-300-1234567",
         variant: "destructive"
       });
       return;
@@ -147,7 +136,7 @@ const SettingsPage: React.FC = () => {
                   name="admin_phone"
                   value={formData.admin_phone}
                   onChange={handleChange}
-                  placeholder="+92-300-1234567"
+                  placeholder="022-2783373"
                 />
               </div>
               

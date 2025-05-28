@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -158,6 +158,10 @@ const BillingHistoryPage: React.FC = () => {
   const handlePrintBill = (bill: Bill) => {
     setSelectedBill(bill);
     setIsPrintDialogOpen(true);
+  };
+  
+  const handleActualPrint = () => {
+    window.print();
   };
   
   const handleDownloadPDF = async (bill: Bill) => {
@@ -578,33 +582,31 @@ const BillingHistoryPage: React.FC = () => {
       
       {/* Print Dialog */}
       <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Bill Preview</span>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm">
-                  <Printer className="h-4 w-4 mr-2" />
-                  Print
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => selectedBill && handleDownloadPDF(selectedBill)}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  PDF
-                </Button>
-              </div>
-            </DialogTitle>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <DialogTitle>Bill Preview</DialogTitle>
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" onClick={handleActualPrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => selectedBill && handleDownloadPDF(selectedBill)}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+            </div>
           </DialogHeader>
-          <div id="bill-print-content" className="border rounded-lg p-6 space-y-6">
+          <div id="bill-print-content" className="border rounded-lg p-6 space-y-6 bg-white">
             {selectedBill && (
               <>
                 <div className="text-center space-y-1">
                   <h2 className="text-xl font-bold">{state.settings.shop_name}</h2>
-                  <p className="text-sm">{state.settings.shop_address}</p>
-                  <p className="text-sm">Contact: {state.settings.admin_phone}</p>
+                  <p className="text-sm">Near MCB bank Gaari khata, station road Hyderabad</p>
+                  <p className="text-sm">Contact: 022-2783373</p>
                 </div>
                 
                 <Separator />
@@ -676,7 +678,7 @@ const BillingHistoryPage: React.FC = () => {
                 
                 <div className="text-center pt-6 space-y-1 text-sm">
                   <p>Thank you for your business!</p>
-                  <p>For any inquiries, please contact us at {state.settings.admin_phone}</p>
+                  <p>For any inquiries, please contact us at 022-2783373</p>
                 </div>
               </>
             )}

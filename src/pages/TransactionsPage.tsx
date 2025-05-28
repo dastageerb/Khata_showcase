@@ -3,34 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApp } from '@/context/AppContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Download, Search, SlidersHorizontal } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Transaction } from '@/context/AppContext';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
 
 const TransactionsPage: React.FC = () => {
   const { state } = useApp();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: undefined,
-    to: undefined
-  });
-  const [paymentModeFilter, setPaymentModeFilter] = useState('');
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   useEffect(() => {
@@ -45,10 +31,9 @@ const TransactionsPage: React.FC = () => {
       allTransactions = [...allTransactions, ...state.companyTransactions];
     }
     
-    // Apply filters
+    // Apply search filter
     let filteredTransactions = allTransactions;
     
-    // Search filter
     if (searchQuery) {
       filteredTransactions = filteredTransactions.filter(transaction => {
         const matchesDescription = transaction.purchase_description
@@ -76,30 +61,6 @@ const TransactionsPage: React.FC = () => {
       });
     }
     
-    // Date filter
-    if (dateFilter.from || dateFilter.to) {
-      filteredTransactions = filteredTransactions.filter(transaction => {
-        const transactionDate = new Date(transaction.date);
-        
-        if (dateFilter.from && dateFilter.to) {
-          return transactionDate >= dateFilter.from && transactionDate <= dateFilter.to;
-        } else if (dateFilter.from) {
-          return transactionDate >= dateFilter.from;
-        } else if (dateFilter.to) {
-          return transactionDate <= dateFilter.to;
-        }
-        
-        return true;
-      });
-    }
-    
-    // Payment mode filter
-    if (paymentModeFilter) {
-      filteredTransactions = filteredTransactions.filter(transaction => 
-        transaction.payment_mode === paymentModeFilter
-      );
-    }
-    
     // Sort by latest date
     filteredTransactions.sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -109,24 +70,16 @@ const TransactionsPage: React.FC = () => {
   }, [
     activeTab,
     searchQuery,
-    dateFilter.from,
-    dateFilter.to,
-    paymentModeFilter,
     state.customerTransactions,
     state.companyTransactions,
     state.customers,
     state.companies
   ]);
 
-  const handleClearFilters = () => {
-    setDateFilter({ from: undefined, to: undefined });
-    setPaymentModeFilter('');
-  };
-
   const handleExportData = () => {
     const csvHeader = 'Date,Entity,Type,Description,Amount,Payment Mode,Bill ID,Created,Updated\n';
     
-    const csvRows = transactions.map(transaction => {
+    const transactionsData = transactions.map(transaction => {
       let entityName = '';
       let entityType = '';
       
@@ -140,25 +93,32 @@ const TransactionsPage: React.FC = () => {
         entityType = 'Company';
       }
       
-      const date = format(new Date(transaction.date), 'yyyy-MM-dd');
-      const description = transaction.purchase_description?.replace(/,/g, ';') || '';
-      const amount = transaction.amount;
-      const paymentMode = transaction.payment_mode;
-      const billId = transaction.bill_id;
-      const type = transaction.type;
-      const created = format(new Date(transaction.created_at), 'yyyy-MM-dd');
-      const updated = format(new Date(transaction.updated_at), 'yyyy-MM-dd');
-      
-      return `${date},"${entityName} (${entityType})","${type}","${description}",${amount},"${paymentMode}","${billId}","${created}","${updated}"`;
-    }).join('\n');
+      return {
+        'Date': format(new Date(transaction.date), 'yyyy-MM-dd'),
+        'Entity': `${entityName} (${entityType})`,
+        'Type': transaction.type.toUpperCase(),
+        'Description': transaction.purchase_description || '',
+        'Amount': transaction.amount,
+        'Payment Mode': transaction.payment_mode,
+        'Bill ID': transaction.bill_id,
+        'Quantity': transaction.quantity,
+        'Additional Notes': transaction.additional_notes || '',
+        'Created': format(new Date(transaction.created_at), 'yyyy-MM-dd HH:mm'),
+        'Updated': format(new Date(transaction.updated_at), 'yyyy-MM-dd HH:mm')
+      };
+    });
+
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(transactionsData);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
     
-    const csvContent = csvHeader + csvRows;
-    
-    console.log('CSV Export:', csvContent);
+    // Download the file
+    XLSX.writeFile(workbook, `transactions-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     
     toast({
-      title: "Export Simulated",
-      description: `${transactions.length} transactions exported (see console for data)`,
+      title: "Export Complete",
+      description: `${transactions.length} transactions exported successfully`,
     });
   };
 
@@ -201,17 +161,9 @@ const TransactionsPage: React.FC = () => {
             />
           </div>
           
-          <Button onClick={() => setIsFilterDialogOpen(true)} variant="outline">
-            <SlidersHorizontal className="h-4 w-4 mr-2" />
-            Filters
-            {(dateFilter.from || dateFilter.to || paymentModeFilter) && (
-              <span className="ml-2 bg-primary w-2 h-2 rounded-full" />
-            )}
-          </Button>
-          
           <Button onClick={handleExportData} variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Export Excel
           </Button>
         </div>
       </div>
@@ -247,111 +199,6 @@ const TransactionsPage: React.FC = () => {
           />
         </TabsContent>
       </Tabs>
-      
-      {/* Filter Dialog */}
-      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filter Transactions</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label>Date Range</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label htmlFor="from-date" className="text-xs">From</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        id="from-date"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !dateFilter.from && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateFilter.from ? format(dateFilter.from, "PP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateFilter.from}
-                        onSelect={(date) => setDateFilter(prev => ({ ...prev, from: date }))}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div className="space-y-1">
-                  <Label htmlFor="to-date" className="text-xs">To</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        id="to-date"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !dateFilter.to && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateFilter.to ? format(dateFilter.to, "PP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateFilter.to}
-                        onSelect={(date) => setDateFilter(prev => ({ ...prev, to: date }))}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="payment-mode">Payment Mode</Label>
-              <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
-                <SelectTrigger id="payment-mode">
-                  <SelectValue placeholder="All Payment Modes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Payment Modes</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="Check">Check</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex justify-between pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClearFilters}
-              >
-                Clear Filters
-              </Button>
-              
-              <Button
-                type="button"
-                className="bg-primary hover:bg-primary/90"
-                onClick={() => setIsFilterDialogOpen(false)}
-              >
-                Apply Filters
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
@@ -373,7 +220,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-8">
           <p className="text-xl font-medium text-gray-400 mb-4">No transactions found</p>
-          <p className="text-gray-500">Try adjusting your filters or search criteria</p>
+          <p className="text-gray-500">Try adjusting your search criteria</p>
         </CardContent>
       </Card>
     );
