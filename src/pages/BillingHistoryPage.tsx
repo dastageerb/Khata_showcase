@@ -264,12 +264,29 @@ const BillingHistoryPage: React.FC = () => {
     return billItems.some(item => item.updated_at.getTime() > bill.created_at.getTime());
   };
 
+  // Add the handleDeleteBill function
+  const handleDeleteBill = (billId: string) => {
+    // Delete all bill items first
+    const billItems = state.billItems.filter(item => item.bill_id === billId);
+    billItems.forEach(item => {
+      dispatch({ type: 'DELETE_BILL_ITEM', payload: item.id });
+    });
+    
+    // Delete the bill
+    dispatch({ type: 'DELETE_BILL', payload: billId });
+    
+    toast({
+      title: "Bill Deleted",
+      description: "Bill and all associated items have been deleted successfully",
+    });
+  };
+
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Billing History</h1>
-          <p className="text-gray-500">View and manage your billing history</p>
+          <h1 className="text-2xl font-bold text-left">Billing History</h1>
+          <p className="text-gray-500 text-left">View and manage your billing history</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
@@ -371,13 +388,34 @@ const BillingHistoryPage: React.FC = () => {
                                   <><ChevronDown className="h-3 w-3 mr-1" />Show items</>
                                 )}
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-xs h-8"
-                              >
-                                <Edit className="h-3 w-3 mr-1" />Edit
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-xs h-8 text-red-600"
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />Delete
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Bill</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete bill "{bill.serial_no}"? This will also delete all associated bill items. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteBill(bill.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete Bill
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -583,7 +621,7 @@ const BillingHistoryPage: React.FC = () => {
       {/* Print Dialog */}
       <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
         <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pr-8">
             <DialogTitle>Bill Preview</DialogTitle>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" onClick={handleActualPrint}>

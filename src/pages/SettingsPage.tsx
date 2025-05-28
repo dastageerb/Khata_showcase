@@ -96,8 +96,8 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-gray-500">Manage your shop settings and account</p>
+        <h1 className="text-2xl font-bold text-left">Settings</h1>
+        <p className="text-gray-500 text-left">Manage your shop settings and account</p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

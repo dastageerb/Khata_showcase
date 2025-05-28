@@ -64,7 +64,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 flex items-center justify-center p-4 font-inter">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 font-inter">
       <div className="w-full max-w-6xl mx-auto">
         <Card className="w-full max-w-md mx-auto shadow-2xl animate-fade-in border-0 rounded-3xl">
           <CardHeader className="text-center space-y-6 pb-8">
@@ -94,7 +94,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-5">
                 <div className="space-y-3">
-                  <Label htmlFor="email" className="text-sm font-semibold text-gray-700 font-inter">Email Address</Label>
+                  <Label htmlFor="email" className="text-sm font-semibold text-gray-700 font-inter text-left block">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
@@ -106,7 +106,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="password" className="text-sm font-semibold text-gray-700 font-inter">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-semibold text-gray-700 font-inter text-left block">Password</Label>
                   <Input
                     id="password"
                     type="password"
