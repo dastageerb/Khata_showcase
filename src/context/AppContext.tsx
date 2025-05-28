@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
 // Types
@@ -316,6 +317,7 @@ type AppAction =
   | { type: 'UPDATE_BILL_ITEM'; payload: BillItem }
   | { type: 'DELETE_BILL_ITEM'; payload: string }
   | { type: 'ADD_PRODUCT'; payload: Product }
+  | { type: 'UPDATE_PRODUCT'; payload: Product }
   | { type: 'UPDATE_SETTINGS'; payload: Settings };
 
 // Reducer
@@ -413,6 +415,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       };
     case 'ADD_PRODUCT':
       return { ...state, products: [...state.products, action.payload] };
+    case 'UPDATE_PRODUCT':
+      return {
+        ...state,
+        products: state.products.map(p => 
+          p.id === action.payload.id ? action.payload : p
+        )
+      };
     case 'UPDATE_SETTINGS':
       return { ...state, settings: action.payload };
     default:
