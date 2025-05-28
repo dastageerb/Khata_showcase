@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
 // Types
@@ -311,6 +312,7 @@ type AppAction =
   | { type: 'UPDATE_COMPANY_TRANSACTION'; payload: Transaction }
   | { type: 'DELETE_COMPANY_TRANSACTION'; payload: string }
   | { type: 'ADD_BILL'; payload: Bill }
+  | { type: 'DELETE_BILL'; payload: string }
   | { type: 'ADD_BILL_ITEM'; payload: BillItem }
   | { type: 'UPDATE_BILL_ITEM'; payload: BillItem }
   | { type: 'DELETE_BILL_ITEM'; payload: string }
@@ -390,6 +392,11 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       };
     case 'ADD_BILL':
       return { ...state, bills: [...state.bills, action.payload] };
+    case 'DELETE_BILL':
+      return {
+        ...state,
+        bills: state.bills.filter(bill => bill.id !== action.payload)
+      };
     case 'ADD_BILL_ITEM':
       return { ...state, billItems: [...state.billItems, action.payload] };
     case 'UPDATE_BILL_ITEM':
