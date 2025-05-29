@@ -142,27 +142,27 @@ const TransactionsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 overflow-x-auto">
-      <div className="min-w-[1200px]">
+    <div className="w-full h-full overflow-x-auto">
+      <div className="min-w-[1400px] space-y-4 p-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Transactions</h1>
-            <p className="text-gray-500">View and manage all financial transactions</p>
+            <h1 className="text-lg font-bold">Transactions</h1>
+            <p className="text-gray-500 text-xs">View and manage all financial transactions</p>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
               <Input
                 placeholder="Search transactions"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full sm:w-[250px]"
+                className="pl-8 w-full sm:w-[200px] text-xs h-8"
               />
             </div>
             
-            <Button onClick={handleExportData} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
+            <Button onClick={handleExportData} variant="outline" className="text-xs h-8">
+              <Download className="h-3 w-3 mr-1" />
               Export Excel
             </Button>
           </div>
@@ -170,9 +170,9 @@ const TransactionsPage: React.FC = () => {
         
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 mb-4 w-full sm:w-auto">
-            <TabsTrigger value="all">All Transactions</TabsTrigger>
-            <TabsTrigger value="customer">Customer</TabsTrigger>
-            <TabsTrigger value="company">Company</TabsTrigger>
+            <TabsTrigger value="all" className="text-xs">All Transactions</TabsTrigger>
+            <TabsTrigger value="customer" className="text-xs">Customer</TabsTrigger>
+            <TabsTrigger value="company" className="text-xs">Company</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all" className="mt-0">
@@ -220,8 +220,8 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-8">
-          <p className="text-xl font-medium text-gray-400 mb-4">No transactions found</p>
-          <p className="text-gray-500">Try adjusting your search criteria</p>
+          <p className="text-lg font-medium text-gray-400 mb-4">No transactions found</p>
+          <p className="text-gray-500 text-xs">Try adjusting your search criteria</p>
         </CardContent>
       </Card>
     );
@@ -229,21 +229,21 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   
   return (
     <Card>
-      <div className="overflow-x-auto">
-        <div className="min-w-[1400px]">
+      <div className="w-full overflow-x-auto">
+        <div className="min-w-[1300px]">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Entity</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Payment Mode</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Bill ID</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead className="text-xs min-w-[100px]">Date</TableHead>
+                <TableHead className="text-xs min-w-[120px]">Entity</TableHead>
+                <TableHead className="text-xs min-w-[80px]">Type</TableHead>
+                <TableHead className="text-xs min-w-[150px]">Description</TableHead>
+                <TableHead className="text-xs min-w-[60px]">Quantity</TableHead>
+                <TableHead className="text-xs min-w-[100px]">Payment Mode</TableHead>
+                <TableHead className="text-xs min-w-[100px]">Amount</TableHead>
+                <TableHead className="text-xs min-w-[100px]">Bill ID</TableHead>
+                <TableHead className="text-xs min-w-[100px]">Created</TableHead>
+                <TableHead className="text-xs min-w-[100px]">Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -253,21 +253,21 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                 
                 return (
                   <TableRow key={transaction.id} className="hover:bg-muted/50">
-                    <TableCell className="whitespace-nowrap">
+                    <TableCell className="whitespace-nowrap text-xs">
                       {format(new Date(transaction.date), 'MMM d, yyyy')}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs">
                       <div className="flex flex-col">
                         <span className="font-medium">{entityName}</span>
-                        <span className={`text-xs px-2 py-1 rounded w-fit ${
+                        <span className={`text-xs px-1 py-0.5 rounded w-fit ${
                           entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
                         }`}>
                           {entityType}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                    <TableCell className="text-xs">
+                      <span className={`inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
                         transaction.type === 'credit' 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
@@ -275,17 +275,17 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                         {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs">
                       <div className="max-w-xs">
                         <p className="font-medium truncate">{transaction.purchase_description || 'No description'}</p>
                         {transaction.additional_notes && (
-                          <p className="text-sm text-gray-500 mt-1 truncate">{transaction.additional_notes}</p>
+                          <p className="text-xs text-gray-500 mt-1 truncate">{transaction.additional_notes}</p>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{transaction.quantity}</TableCell>
-                    <TableCell className="whitespace-nowrap">{transaction.payment_mode}</TableCell>
-                    <TableCell className={`font-bold whitespace-nowrap ${
+                    <TableCell className="text-xs">{transaction.quantity}</TableCell>
+                    <TableCell className="whitespace-nowrap text-xs">{transaction.payment_mode}</TableCell>
+                    <TableCell className={`font-bold whitespace-nowrap text-xs ${
                       transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
@@ -294,11 +294,11 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                         currencyDisplay: 'narrowSymbol'
                       }).format(transaction.amount)}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">{transaction.bill_id}</TableCell>
-                    <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                    <TableCell className="whitespace-nowrap text-xs">{transaction.bill_id}</TableCell>
+                    <TableCell className="whitespace-nowrap text-xs text-gray-500">
                       {format(new Date(transaction.created_at), 'MMM d, yyyy')}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                    <TableCell className="whitespace-nowrap text-xs text-gray-500">
                       {format(new Date(transaction.updated_at), 'MMM d, yyyy')}
                     </TableCell>
                   </TableRow>

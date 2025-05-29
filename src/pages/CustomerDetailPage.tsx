@@ -44,7 +44,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
   if (!customer) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-xl text-gray-500">Customer not found</p>
+        <p className="text-lg text-gray-500">Customer not found</p>
       </div>
     );
   }
@@ -105,7 +105,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
 
     setTimeout(() => {
       const newTransaction = {
-        id: generateId('ct'),
+        id: generateId('cust'),
         customer_id: customer.id,
         date: new Date(formData.date),
         quantity: formData.quantity,
@@ -155,38 +155,38 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
   const balance = calculateCustomerBalance(customer.id);
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8 overflow-x-auto">
-      <div className="min-w-[1400px]">
+    <div className="w-full h-full overflow-x-auto">
+      <div className="min-w-[1400px] p-4 space-y-4">
         {/* Header */}
-        <div className="flex items-center mb-6 md:mb-8">
+        <div className="flex items-center mb-4">
           <Button 
             variant="ghost" 
             onClick={() => onNavigate('/customers')} 
             className="p-2 hover:bg-slate-200 rounded-full mr-2"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+            <ArrowLeft className="h-4 w-4 text-gray-600" />
           </Button>
-          <h1 className="text-2xl font-bold text-gray-700 ml-2">Customer Details</h1>
+          <h1 className="text-lg font-bold text-gray-700 ml-2">Customer Details</h1>
         </div>
 
         {/* Customer Profile Card */}
-        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8 min-w-[1350px]">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center">
-            <div className="flex items-center mb-4 lg:mb-0 lg:mr-8 min-w-[300px]">
-              <div className="bg-primary p-3 rounded-full text-white mr-4">
-                <User className="h-6 w-6" />
+        <div className="bg-white shadow-lg rounded-xl p-4 mb-4 min-w-[1350px]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center min-w-[400px]">
+              <div className="bg-primary p-2 rounded-full text-white mr-3">
+                <User className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-primary">{customer.name}</h2>
-                <p className="text-sm text-gray-500">Phone: {customer.phone}</p>
-                <p className="text-sm text-gray-500">NIC: {customer.nic_number}</p>
-                <p className="text-sm text-gray-500">Address: {customer.address || 'Not provided'}</p>
+                <h2 className="text-lg font-semibold text-primary">{customer.name}</h2>
+                <p className="text-xs text-gray-500">Phone: {customer.phone}</p>
+                <p className="text-xs text-gray-500">Address: {customer.address || 'Not provided'}</p>
+                <p className="text-xs text-gray-500">NIC: {customer.nic_number || 'Not provided'}</p>
               </div>
             </div>
             
-            <div className="flex-grow text-center mb-4 lg:mb-0 min-w-[200px]">
-              <p className="text-sm text-gray-500 mb-1">Balance</p>
-              <p className={`text-3xl font-bold ${
+            <div className="text-center min-w-[200px]">
+              <p className="text-xs text-gray-500 mb-1">Balance</p>
+              <p className={`text-2xl font-bold ${
                 balance >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {balance >= 0 ? '' : '-'}Rs {Math.abs(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -201,19 +201,19 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                     className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
                     title="Delete"
                   >
-                    <Trash2 className="h-5 w-5" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Customer</AlertDialogTitle>
-                    <AlertDialogDescription>
+                    <AlertDialogTitle className="text-sm">Delete Customer</AlertDialogTitle>
+                    <AlertDialogDescription className="text-xs">
                       Are you sure you want to delete {customer.name}? This action cannot be undone and will remove all associated transactions.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteCustomer} className="bg-red-600 hover:bg-red-700">
+                    <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteCustomer} className="bg-red-600 hover:bg-red-700 text-xs">
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -226,7 +226,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                 title="Edit"
                 onClick={() => setIsEditCustomerDialogOpen(true)}
               >
-                <Edit className="h-5 w-5" />
+                <Edit className="h-4 w-4" />
               </Button>
               <Button 
                 variant="ghost"
@@ -234,38 +234,38 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                 className="p-2 hover:bg-gray-200 rounded-full text-gray-600"
                 title="Add Transaction"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white shadow-lg rounded-xl p-6 min-w-[1350px]">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
+        <div className="bg-white shadow-lg rounded-xl p-4 min-w-[1350px]">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2 md:mb-0">
               Transaction History ({customerTransactions.length})
             </h2>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="outline"
-                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700"
+                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs h-8"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-3 w-3 mr-1" />
                   Clear Record
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Clear All Records</AlertDialogTitle>
-                  <AlertDialogDescription>
+                  <AlertDialogTitle className="text-sm">Clear All Records</AlertDialogTitle>
+                  <AlertDialogDescription className="text-xs">
                     Are you sure you want to clear all transaction records for {customer.name}? This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleClearRecord} className="bg-red-600 hover:bg-red-700">
+                  <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearRecord} className="bg-red-600 hover:bg-red-700 text-xs">
                     Clear All
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -275,34 +275,34 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
           
           {customerTransactions.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">No transactions found</p>
+              <p className="text-gray-500 text-xs">No transactions found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="w-full overflow-x-auto">
               <div className="min-w-[1300px]">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Date</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[80px]">Type</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[150px]">Description</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Payment</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[80px]">Qty</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Amount</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Bill ID</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Created</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[150px]">Notes</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium text-center min-w-[100px]">Actions</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Date</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[70px] text-xs">Type</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[130px] text-xs">Description</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Payment</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[60px] text-xs">Qty</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Amount</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Bill ID</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Created</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[130px] text-xs">Notes</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium text-center min-w-[80px] text-xs">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {customerTransactions.map((transaction) => (
                       <TableRow key={transaction.id} className="hover:bg-slate-50 border-b">
-                        <TableCell className="px-6 py-4 whitespace-nowrap">
+                        <TableCell className="px-4 py-3 whitespace-nowrap text-xs">
                           {format(new Date(transaction.date), 'MMM d, yyyy')}
                         </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        <TableCell className="px-4 py-3 text-xs">
+                          <span className={`inline-flex items-center px-1 py-0.5 rounded-full text-xs font-medium ${
                             transaction.type === 'credit' 
                               ? 'bg-green-100 text-green-700' 
                               : 'bg-red-100 text-red-700'
@@ -310,35 +310,35 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                             {transaction.type === 'credit' ? '+' : '-'}
                           </span>
                         </TableCell>
-                        <TableCell className="px-6 py-4 font-medium text-gray-900">
-                          <div className="max-w-[130px] truncate" title={transaction.purchase_description || 'No description'}>
+                        <TableCell className="px-4 py-3 font-medium text-gray-900 text-xs">
+                          <div className="max-w-[110px] truncate" title={transaction.purchase_description || 'No description'}>
                             {transaction.purchase_description || 'No description'}
                           </div>
                         </TableCell>
-                        <TableCell className="px-6 py-4">{transaction.payment_mode}</TableCell>
-                        <TableCell className="px-6 py-4">{transaction.quantity}</TableCell>
-                        <TableCell className={`px-6 py-4 font-medium ${
+                        <TableCell className="px-4 py-3 text-xs">{transaction.payment_mode}</TableCell>
+                        <TableCell className="px-4 py-3 text-xs">{transaction.quantity}</TableCell>
+                        <TableCell className={`px-4 py-3 font-medium text-xs ${
                           transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           {transaction.type === 'credit' ? '+' : '-'}Rs {transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </TableCell>
-                        <TableCell className="px-6 py-4">{transaction.bill_id}</TableCell>
-                        <TableCell className="px-6 py-4 text-sm text-gray-500">
+                        <TableCell className="px-4 py-3 text-xs">{transaction.bill_id}</TableCell>
+                        <TableCell className="px-4 py-3 text-xs text-gray-500">
                           {format(new Date(transaction.created_at), 'MMM d, yyyy')}
                         </TableCell>
-                        <TableCell className="px-6 py-4">
-                          <div className="max-w-[130px] truncate" title={transaction.additional_notes || 'No notes'}>
+                        <TableCell className="px-4 py-3 text-xs">
+                          <div className="max-w-[110px] truncate" title={transaction.additional_notes || 'No notes'}>
                             {transaction.additional_notes || 'No notes'}
                           </div>
                         </TableCell>
-                        <TableCell className="px-6 py-4 text-center">
+                        <TableCell className="px-4 py-3 text-center">
                           <Button
                             variant="ghost"
                             className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
                             title="Edit Transaction"
                             onClick={() => handleEditTransaction(transaction)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3 w-3" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -355,24 +355,24 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
       <Dialog open={isTransactionFormOpen} onOpenChange={setIsTransactionFormOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Transaction for {customer.name}</DialogTitle>
+            <DialogTitle className="text-sm">Add Transaction for {customer.name}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmitTransaction} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmitTransaction} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="type">Transaction Type</Label>
+                <Label htmlFor="type" className="text-xs">Transaction Type</Label>
                 <Select value={formData.type} onValueChange={(value: 'credit' | 'debit') => setFormData({...formData, type: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-xs h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="credit">Credit (+)</SelectItem>
-                    <SelectItem value="debit">Debit (-)</SelectItem>
+                    <SelectItem value="credit" className="text-xs">Credit (+)</SelectItem>
+                    <SelectItem value="debit" className="text-xs">Debit (-)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount" className="text-xs">Amount</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -380,61 +380,65 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                   value={formData.amount}
                   onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
                   required
+                  className="text-xs h-8"
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor="date" className="text-xs">Date</Label>
               <Input
                 id="date"
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({...formData, date: e.target.value})}
                 required
+                className="text-xs h-8"
               />
             </div>
 
             <div>
-              <Label htmlFor="payment_mode">Payment Mode</Label>
+              <Label htmlFor="payment_mode" className="text-xs">Payment Mode</Label>
               <Select value={formData.payment_mode} onValueChange={(value) => setFormData({...formData, payment_mode: value})}>
-                <SelectTrigger>
+                <SelectTrigger className="text-xs h-8">
                   <SelectValue placeholder="Select payment mode" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="Check">Check</SelectItem>
+                  <SelectItem value="Cash" className="text-xs">Cash</SelectItem>
+                  <SelectItem value="Bank Transfer" className="text-xs">Bank Transfer</SelectItem>
+                  <SelectItem value="Online" className="text-xs">Online</SelectItem>
+                  <SelectItem value="Check" className="text-xs">Check</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="bill_id">Bill ID (Optional)</Label>
+              <Label htmlFor="bill_id" className="text-xs">Bill ID (Optional)</Label>
               <Input
                 id="bill_id"
                 value={formData.bill_id}
                 onChange={(e) => setFormData({...formData, bill_id: e.target.value})}
                 placeholder="Enter bill ID"
+                className="text-xs h-8"
               />
             </div>
 
             <div>
-              <Label htmlFor="description">Purchase Description (Optional)</Label>
+              <Label htmlFor="description" className="text-xs">Purchase Description (Optional)</Label>
               <Input
                 id="description"
                 value={formData.purchase_description}
                 onChange={(e) => setFormData({...formData, purchase_description: e.target.value})}
                 placeholder="Enter description"
+                className="text-xs h-8"
               />
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsTransactionFormOpen(false)}>
+            <div className="flex justify-end space-x-2 pt-3">
+              <Button type="button" variant="outline" onClick={() => setIsTransactionFormOpen(false)} className="text-xs h-8">
                 Cancel
               </Button>
-              <Button type="submit" disabled={state.isLoading}>
+              <Button type="submit" disabled={state.isLoading} className="text-xs h-8">
                 {state.isLoading ? 'Adding...' : 'Add Transaction'}
               </Button>
             </div>

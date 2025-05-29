@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import FloatingNavigation from '@/components/navigation/FloatingNavigation';
+import MobileBottomNavigation from '@/components/navigation/MobileBottomNavigation';
 import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Import all page components
 import Homepage from '@/pages/Homepage';
@@ -23,6 +24,7 @@ const MainLayout: React.FC = () => {
   const [isNavExpanded, setIsNavExpanded] = useState(false);
   const { state, dispatch } = useApp();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleLogout = () => {
     dispatch({ type: 'SET_CURRENT_USER', payload: null });
@@ -69,40 +71,49 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-inter overflow-hidden">
-      <FloatingNavigation 
-        currentPath={currentPath}
-        onNavigate={(path) => handleNavigate(path)}
-        onExpandedChange={setIsNavExpanded}
-      />
+      {!isMobile && (
+        <FloatingNavigation 
+          currentPath={currentPath}
+          onNavigate={(path) => handleNavigate(path)}
+          onExpandedChange={setIsNavExpanded}
+        />
+      )}
       
-      <div className={`flex-1 transition-all duration-300 flex flex-col ${isNavExpanded ? 'ml-48 sm:ml-52' : 'ml-4 sm:ml-16'}`}>
+      <div className={`flex-1 transition-all duration-300 flex flex-col ${
+        !isMobile ? (isNavExpanded ? 'ml-48 sm:ml-52' : 'ml-4 sm:ml-16') : ''
+      }`}>
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40 shrink-0">
-          <div className="container mx-auto px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <h1 className="text-lg font-bold text-primary tracking-tight font-inter">
+          <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-sm font-bold text-primary tracking-tight font-inter">
                 {state.settings.shop_name}
               </h1>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded-xl">
-                <User className="w-4 h-4 text-primary" />
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-gray-50 px-2 py-1 rounded-lg">
+                <User className="w-3 h-3 text-primary" />
                 <span className="text-xs font-semibold text-gray-700 hidden sm:block font-inter">{state.currentUser?.name}</span>
               </div>
-              <Button variant="outline" onClick={handleLogout} size="sm" className="font-medium rounded-xl font-inter text-xs h-8">
-                <LogOut className="w-3 h-3 mr-2" />
+              <Button variant="outline" onClick={handleLogout} size="sm" className="font-medium rounded-lg font-inter text-xs h-7">
+                <LogOut className="w-3 h-3 mr-1" />
                 <span className="hidden sm:block">Logout</span>
               </Button>
             </div>
           </div>
         </header>
         
-        <main className="container mx-auto px-6 py-4 flex-1 min-h-0">
+        <main className={`container mx-auto px-4 py-2 flex-1 min-h-0 ${isMobile ? 'pb-16' : ''}`}>
           <div className="animate-fade-in h-full">
             {renderContent()}
           </div>
         </main>
       </div>
+
+      <MobileBottomNavigation 
+        currentPath={currentPath}
+        onNavigate={handleNavigate}
+      />
     </div>
   );
 };
