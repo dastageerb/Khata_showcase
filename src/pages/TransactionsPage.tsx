@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -142,8 +143,8 @@ const TransactionsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full overflow-x-auto">
-      <div className="min-w-[1400px] space-y-4 p-4">
+    <div className="w-full min-h-screen overflow-x-auto">
+      <div className="min-w-[320px] space-y-4 p-2 sm:p-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-lg font-bold">Transactions</h1>
@@ -161,7 +162,7 @@ const TransactionsPage: React.FC = () => {
               />
             </div>
             
-            <Button onClick={handleExportData} variant="outline" className="text-xs h-8">
+            <Button onClick={handleExportData} variant="outline" className="text-xs h-8 whitespace-nowrap">
               <Download className="h-3 w-3 mr-1" />
               Export Excel
             </Button>
@@ -169,11 +170,13 @@ const TransactionsPage: React.FC = () => {
         </div>
         
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mb-4 w-full sm:w-auto">
-            <TabsTrigger value="all" className="text-xs">All Transactions</TabsTrigger>
-            <TabsTrigger value="customer" className="text-xs">Customer</TabsTrigger>
-            <TabsTrigger value="company" className="text-xs">Company</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto">
+            <TabsList className="grid grid-cols-3 mb-4 w-full sm:w-auto min-w-[300px]">
+              <TabsTrigger value="all" className="text-xs">All Transactions</TabsTrigger>
+              <TabsTrigger value="customer" className="text-xs">Customer</TabsTrigger>
+              <TabsTrigger value="company" className="text-xs">Company</TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="all" className="mt-0">
             <TransactionsList 
@@ -230,20 +233,20 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   return (
     <Card>
       <div className="w-full overflow-x-auto">
-        <div className="min-w-[1300px]">
+        <div className="min-w-[1400px]">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs min-w-[100px]">Date</TableHead>
-                <TableHead className="text-xs min-w-[120px]">Entity</TableHead>
+                <TableHead className="text-xs min-w-[100px] sticky left-0 bg-white z-10 border-r">Date</TableHead>
+                <TableHead className="text-xs min-w-[150px]">Entity</TableHead>
                 <TableHead className="text-xs min-w-[80px]">Type</TableHead>
-                <TableHead className="text-xs min-w-[150px]">Description</TableHead>
-                <TableHead className="text-xs min-w-[60px]">Quantity</TableHead>
-                <TableHead className="text-xs min-w-[100px]">Payment Mode</TableHead>
-                <TableHead className="text-xs min-w-[100px]">Amount</TableHead>
-                <TableHead className="text-xs min-w-[100px]">Bill ID</TableHead>
+                <TableHead className="text-xs min-w-[180px]">Description</TableHead>
+                <TableHead className="text-xs min-w-[80px]">Quantity</TableHead>
+                <TableHead className="text-xs min-w-[120px]">Payment Mode</TableHead>
+                <TableHead className="text-xs min-w-[120px]">Amount</TableHead>
+                <TableHead className="text-xs min-w-[120px]">Bill ID</TableHead>
                 <TableHead className="text-xs min-w-[100px]">Created</TableHead>
-                <TableHead className="text-xs min-w-[100px]">Updated</TableHead>
+                <TableHead className="text-xs min-w-[100px] sticky right-0 bg-white z-10 border-l">Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -253,12 +256,12 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                 
                 return (
                   <TableRow key={transaction.id} className="hover:bg-muted/50">
-                    <TableCell className="whitespace-nowrap text-xs">
+                    <TableCell className="whitespace-nowrap text-xs sticky left-0 bg-white z-10 border-r">
                       {format(new Date(transaction.date), 'MMM d, yyyy')}
                     </TableCell>
                     <TableCell className="text-xs">
                       <div className="flex flex-col">
-                        <span className="font-medium">{entityName}</span>
+                        <span className="font-medium whitespace-nowrap">{entityName}</span>
                         <span className={`text-xs px-1 py-0.5 rounded w-fit ${
                           entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
                         }`}>
@@ -276,14 +279,14 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                       </span>
                     </TableCell>
                     <TableCell className="text-xs">
-                      <div className="max-w-xs">
+                      <div className="max-w-[160px]">
                         <p className="font-medium truncate">{transaction.purchase_description || 'No description'}</p>
                         {transaction.additional_notes && (
                           <p className="text-xs text-gray-500 mt-1 truncate">{transaction.additional_notes}</p>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs">{transaction.quantity}</TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">{transaction.quantity}</TableCell>
                     <TableCell className="whitespace-nowrap text-xs">{transaction.payment_mode}</TableCell>
                     <TableCell className={`font-bold whitespace-nowrap text-xs ${
                       transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
@@ -298,7 +301,7 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
                     <TableCell className="whitespace-nowrap text-xs text-gray-500">
                       {format(new Date(transaction.created_at), 'MMM d, yyyy')}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-xs text-gray-500">
+                    <TableCell className="whitespace-nowrap text-xs text-gray-500 sticky right-0 bg-white z-10 border-l">
                       {format(new Date(transaction.updated_at), 'MMM d, yyyy')}
                     </TableCell>
                   </TableRow>

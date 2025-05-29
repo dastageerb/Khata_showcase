@@ -155,10 +155,10 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
   const balance = calculateCompanyBalance(company.id);
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8 overflow-x-auto">
-      <div className="min-w-[1400px]">
+    <div className="w-full min-h-screen overflow-x-auto bg-gray-50">
+      <div className="min-w-[320px] p-2 sm:p-4 space-y-4">
         {/* Header */}
-        <div className="flex items-center mb-6 md:mb-8">
+        <div className="flex items-center mb-4">
           <Button 
             variant="ghost" 
             onClick={() => onNavigate('/companies')} 
@@ -166,33 +166,33 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
           >
             <ArrowLeft className="h-5 w-5 text-gray-600" />
           </Button>
-          <h1 className="text-2xl font-bold text-gray-700 ml-2">Company Details</h1>
+          <h1 className="text-xl font-bold text-gray-700 ml-2">Company Details</h1>
         </div>
 
         {/* Company Profile Card */}
-        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8 min-w-[1350px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center min-w-[400px]">
-              <div className="bg-primary p-3 rounded-full text-white mr-4">
+        <div className="bg-white shadow-lg rounded-xl p-4 mb-4 w-full overflow-x-auto">
+          <div className="min-w-[600px] flex items-center justify-between">
+            <div className="flex items-center min-w-[300px]">
+              <div className="bg-primary p-3 rounded-full text-white mr-4 flex-shrink-0">
                 <Building className="h-6 w-6" />
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-primary">{company.name}</h2>
-                <p className="text-sm text-gray-500">Contact: {company.contact_number}</p>
-                <p className="text-sm text-gray-500">Address: {company.address || 'Not provided'}</p>
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold text-primary truncate">{company.name}</h2>
+                <p className="text-sm text-gray-500 truncate">Contact: {company.contact_number}</p>
+                <p className="text-sm text-gray-500 truncate">Address: {company.address || 'Not provided'}</p>
               </div>
             </div>
             
-            <div className="text-center min-w-[200px]">
+            <div className="text-center min-w-[150px] flex-shrink-0">
               <p className="text-sm text-gray-500 mb-1">Balance</p>
-              <p className={`text-3xl font-bold ${
+              <p className={`text-2xl font-bold ${
                 balance >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {balance >= 0 ? '' : '-'}Rs {Math.abs(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
             
-            <div className="flex items-center space-x-2 min-w-[200px] justify-end">
+            <div className="flex items-center space-x-2 min-w-[150px] justify-end flex-shrink-0">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
@@ -240,8 +240,8 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white shadow-lg rounded-xl p-6 min-w-[1350px]">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div className="bg-white shadow-lg rounded-xl p-4 w-full overflow-x-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
               Transaction History ({companyTransactions.length})
             </h2>
@@ -249,7 +249,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="outline"
-                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700"
+                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 whitespace-nowrap"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Clear Record
@@ -277,12 +277,12 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
               <p className="text-gray-500">No transactions found</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="min-w-[1300px]">
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-[1400px]">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Date</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px] sticky left-0 bg-slate-50 z-10 border-r">Date</TableHead>
                       <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[80px]">Type</TableHead>
                       <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[150px]">Description</TableHead>
                       <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Payment</TableHead>
@@ -291,13 +291,13 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
                       <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Bill ID</TableHead>
                       <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Created</TableHead>
                       <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[150px]">Notes</TableHead>
-                      <TableHead className="px-6 py-3 text-slate-600 font-medium text-center min-w-[100px]">Actions</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium text-center min-w-[100px] sticky right-0 bg-slate-50 z-10 border-l">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {companyTransactions.map((transaction) => (
                       <TableRow key={transaction.id} className="hover:bg-slate-50 border-b">
-                        <TableCell className="px-6 py-4 whitespace-nowrap">
+                        <TableCell className="px-6 py-4 whitespace-nowrap sticky left-0 bg-white z-10 border-r">
                           {format(new Date(transaction.date), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell className="px-6 py-4">
@@ -314,15 +314,15 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
                             {transaction.purchase_description || 'No description'}
                           </div>
                         </TableCell>
-                        <TableCell className="px-6 py-4">{transaction.payment_mode}</TableCell>
+                        <TableCell className="px-6 py-4 whitespace-nowrap">{transaction.payment_mode}</TableCell>
                         <TableCell className="px-6 py-4">{transaction.quantity}</TableCell>
-                        <TableCell className={`px-6 py-4 font-medium ${
+                        <TableCell className={`px-6 py-4 font-medium whitespace-nowrap ${
                           transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           {transaction.type === 'credit' ? '+' : '-'}Rs {transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </TableCell>
-                        <TableCell className="px-6 py-4">{transaction.bill_id}</TableCell>
-                        <TableCell className="px-6 py-4 text-sm text-gray-500">
+                        <TableCell className="px-6 py-4 whitespace-nowrap">{transaction.bill_id}</TableCell>
+                        <TableCell className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                           {format(new Date(transaction.created_at), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell className="px-6 py-4">
@@ -330,7 +330,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
                             {transaction.additional_notes || 'No notes'}
                           </div>
                         </TableCell>
-                        <TableCell className="px-6 py-4 text-center">
+                        <TableCell className="px-6 py-4 text-center sticky right-0 bg-white z-10 border-l">
                           <Button
                             variant="ghost"
                             className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"

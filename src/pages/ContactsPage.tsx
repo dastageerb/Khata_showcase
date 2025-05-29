@@ -11,10 +11,10 @@ const ContactsPage: React.FC<ContactsPageProps> = ({ onNavigate }) => {
   // Check current path to determine which page to show
   const currentPath = window.location.pathname;
   
-  if (currentPath === '/customers') {
-    return <CustomersPage onNavigate={onNavigate} />;
-  } else if (currentPath === '/companies') {
+  if (currentPath === '/companies') {
     return <CompaniesPage onNavigate={onNavigate} />;
+  } else if (currentPath === '/customers') {
+    return <CustomersPage onNavigate={onNavigate} />;
   }
   
   // Default to customers if path is ambiguous

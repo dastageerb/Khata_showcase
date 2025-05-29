@@ -155,8 +155,8 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
   const balance = calculateCustomerBalance(customer.id);
 
   return (
-    <div className="w-full h-full overflow-x-auto">
-      <div className="min-w-[1400px] p-4 space-y-4">
+    <div className="w-full min-h-screen overflow-x-auto bg-gray-50">
+      <div className="min-w-[320px] p-2 sm:p-4 space-y-4">
         {/* Header */}
         <div className="flex items-center mb-4">
           <Button 
@@ -170,30 +170,30 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
         </div>
 
         {/* Customer Profile Card */}
-        <div className="bg-white shadow-lg rounded-xl p-4 mb-4 min-w-[1350px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center min-w-[400px]">
-              <div className="bg-primary p-2 rounded-full text-white mr-3">
+        <div className="bg-white shadow-lg rounded-xl p-4 mb-4 w-full overflow-x-auto">
+          <div className="min-w-[600px] flex items-center justify-between">
+            <div className="flex items-center min-w-[300px]">
+              <div className="bg-primary p-2 rounded-full text-white mr-3 flex-shrink-0">
                 <User className="h-5 w-5" />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-primary">{customer.name}</h2>
-                <p className="text-xs text-gray-500">Phone: {customer.phone}</p>
-                <p className="text-xs text-gray-500">Address: {customer.address || 'Not provided'}</p>
-                <p className="text-xs text-gray-500">NIC: {customer.nic_number || 'Not provided'}</p>
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-primary truncate">{customer.name}</h2>
+                <p className="text-xs text-gray-500 truncate">Phone: {customer.phone}</p>
+                <p className="text-xs text-gray-500 truncate">Address: {customer.address || 'Not provided'}</p>
+                <p className="text-xs text-gray-500 truncate">NIC: {customer.nic_number || 'Not provided'}</p>
               </div>
             </div>
             
-            <div className="text-center min-w-[200px]">
+            <div className="text-center min-w-[120px] flex-shrink-0">
               <p className="text-xs text-gray-500 mb-1">Balance</p>
-              <p className={`text-2xl font-bold ${
+              <p className={`text-xl font-bold ${
                 balance >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {balance >= 0 ? '' : '-'}Rs {Math.abs(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
             
-            <div className="flex items-center space-x-2 min-w-[200px] justify-end">
+            <div className="flex items-center space-x-2 min-w-[120px] justify-end flex-shrink-0">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
@@ -241,7 +241,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white shadow-lg rounded-xl p-4 min-w-[1350px]">
+        <div className="bg-white shadow-lg rounded-xl p-4 w-full overflow-x-auto">
           <div className="flex flex-col md:flex-row justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800 mb-2 md:mb-0">
               Transaction History ({customerTransactions.length})
@@ -250,7 +250,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="outline"
-                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs h-8"
+                  className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs h-8 whitespace-nowrap"
                 >
                   <Trash2 className="h-3 w-3 mr-1" />
                   Clear Record
@@ -279,26 +279,26 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
             </div>
           ) : (
             <div className="w-full overflow-x-auto">
-              <div className="min-w-[1300px]">
+              <div className="min-w-[1400px]">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Date</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[70px] text-xs">Type</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[130px] text-xs">Description</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Payment</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[60px] text-xs">Qty</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Amount</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Bill ID</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs sticky left-0 bg-slate-50 z-10 border-r">Date</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[80px] text-xs">Type</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[150px] text-xs">Description</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[120px] text-xs">Payment</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[80px] text-xs">Qty</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[120px] text-xs">Amount</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[120px] text-xs">Bill ID</TableHead>
                       <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[100px] text-xs">Created</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[130px] text-xs">Notes</TableHead>
-                      <TableHead className="px-4 py-2 text-slate-600 font-medium text-center min-w-[80px] text-xs">Actions</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium min-w-[150px] text-xs">Notes</TableHead>
+                      <TableHead className="px-4 py-2 text-slate-600 font-medium text-center min-w-[100px] text-xs sticky right-0 bg-slate-50 z-10 border-l">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {customerTransactions.map((transaction) => (
                       <TableRow key={transaction.id} className="hover:bg-slate-50 border-b">
-                        <TableCell className="px-4 py-3 whitespace-nowrap text-xs">
+                        <TableCell className="px-4 py-3 whitespace-nowrap text-xs sticky left-0 bg-white z-10 border-r">
                           {format(new Date(transaction.date), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-xs">
@@ -311,27 +311,27 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
                           </span>
                         </TableCell>
                         <TableCell className="px-4 py-3 font-medium text-gray-900 text-xs">
-                          <div className="max-w-[110px] truncate" title={transaction.purchase_description || 'No description'}>
+                          <div className="max-w-[130px] truncate" title={transaction.purchase_description || 'No description'}>
                             {transaction.purchase_description || 'No description'}
                           </div>
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-xs">{transaction.payment_mode}</TableCell>
+                        <TableCell className="px-4 py-3 text-xs whitespace-nowrap">{transaction.payment_mode}</TableCell>
                         <TableCell className="px-4 py-3 text-xs">{transaction.quantity}</TableCell>
-                        <TableCell className={`px-4 py-3 font-medium text-xs ${
+                        <TableCell className={`px-4 py-3 font-medium text-xs whitespace-nowrap ${
                           transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           {transaction.type === 'credit' ? '+' : '-'}Rs {transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-xs">{transaction.bill_id}</TableCell>
-                        <TableCell className="px-4 py-3 text-xs text-gray-500">
+                        <TableCell className="px-4 py-3 text-xs whitespace-nowrap">{transaction.bill_id}</TableCell>
+                        <TableCell className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
                           {format(new Date(transaction.created_at), 'MMM d, yyyy')}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-xs">
-                          <div className="max-w-[110px] truncate" title={transaction.additional_notes || 'No notes'}>
+                          <div className="max-w-[130px] truncate" title={transaction.additional_notes || 'No notes'}>
                             {transaction.additional_notes || 'No notes'}
                           </div>
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-center">
+                        <TableCell className="px-4 py-3 text-center sticky right-0 bg-white z-10 border-l">
                           <Button
                             variant="ghost"
                             className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
