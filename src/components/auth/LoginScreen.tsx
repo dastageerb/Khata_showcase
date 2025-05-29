@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +28,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
       });
       onShowSignup();
       setTitleClickCount(0);
-    } else if (newCount > 2) {
+    } else if (newCount > 3) {
       toast({
         title: `${5 - newCount} more taps...`,
         description: "Keep tapping to unlock something special!",
@@ -70,14 +69,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
           <CardHeader className="text-center space-y-6 pb-8">
             <div 
               onClick={handleTitleClick}
-              className="cursor-pointer select-none transition-all duration-300 hover:scale-105"
+              className="cursor-pointer select-none"
             >
               <h1 className="text-4xl font-bold text-primary tracking-tight font-inter">
                 Al Mehran Radiator
               </h1>
               <p className="text-base text-gray-600 mt-3 font-medium font-inter">Financial Management Portal</p>
             </div>
-            {titleClickCount > 0 && titleClickCount < 5 && (
+            {titleClickCount > 3 && titleClickCount < 5 && (
               <div className="flex justify-center space-x-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div

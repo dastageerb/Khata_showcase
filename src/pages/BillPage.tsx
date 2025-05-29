@@ -27,6 +27,7 @@ const BillPage: React.FC = () => {
   const { toast } = useToast();
   
   const [customerName, setCustomerName] = useState('');
+  const [billDate, setBillDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [billItems, setBillItems] = useState<BillItemForm[]>([
     { product_name: '', quantity: 1, price: 0, amount: 0 }
   ]);
@@ -105,13 +106,13 @@ const BillPage: React.FC = () => {
       return;
     }
 
-    // Create bill
+    // Create bill with selected date
     const newBill: Bill = {
       id: billId,
       serial_no: serialNo,
       customer_name: customerName,
       admin_phone: state.settings.admin_phone,
-      date: new Date(),
+      date: new Date(billDate),
       total_amount: calculateTotal(),
       created_by: currentUser.id,
       created_at: new Date(),
@@ -234,6 +235,7 @@ const BillPage: React.FC = () => {
 
     // Reset form
     setCustomerName('');
+    setBillDate(format(new Date(), 'yyyy-MM-dd'));
     setBillItems([{ product_name: '', quantity: 1, price: 0, amount: 0 }]);
 
     toast({
@@ -316,11 +318,13 @@ const BillPage: React.FC = () => {
               />
             </div>
             <div>
-              <Label className="text-sm">Date</Label>
+              <Label htmlFor="bill-date" className="text-sm">Date</Label>
               <Input
-                value={format(new Date(), 'yyyy-MM-dd')}
-                readOnly
-                className="bg-gray-50 text-sm"
+                id="bill-date"
+                type="date"
+                value={billDate}
+                onChange={(e) => setBillDate(e.target.value)}
+                className="text-sm"
               />
             </div>
           </div>

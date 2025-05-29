@@ -156,7 +156,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
 
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 overflow-x-auto">
-      <div className="max-w-6xl mx-auto min-w-[800px]">
+      <div className="min-w-[1400px]">
         {/* Header */}
         <div className="flex items-center mb-6 md:mb-8">
           <Button 
@@ -170,7 +170,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
         </div>
 
         {/* Customer Profile Card */}
-        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8">
+        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8 min-w-[1350px]">
           <div className="flex flex-col lg:flex-row items-start lg:items-center">
             <div className="flex items-center mb-4 lg:mb-0 lg:mr-8 min-w-[300px]">
               <div className="bg-primary p-3 rounded-full text-white mr-4">
@@ -241,7 +241,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white shadow-lg rounded-xl p-6">
+        <div className="bg-white shadow-lg rounded-xl p-6 min-w-[1350px]">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
               Transaction History ({customerTransactions.length})
@@ -279,7 +279,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customerId, onN
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <div className="min-w-[1200px]">
+              <div className="min-w-[1300px]">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">

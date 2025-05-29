@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -157,7 +156,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
 
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 overflow-x-auto">
-      <div className="min-w-[1200px]">
+      <div className="min-w-[1400px]">
         {/* Header */}
         <div className="flex items-center mb-6 md:mb-8">
           <Button 
@@ -171,7 +170,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
         </div>
 
         {/* Company Profile Card */}
-        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8 min-w-[1150px]">
+        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8 min-w-[1350px]">
           <div className="flex items-center justify-between">
             <div className="flex items-center min-w-[400px]">
               <div className="bg-primary p-3 rounded-full text-white mr-4">
@@ -241,7 +240,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white shadow-lg rounded-xl p-6 min-w-[1150px]">
+        <div className="bg-white shadow-lg rounded-xl p-6 min-w-[1350px]">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
               Transaction History ({companyTransactions.length})
@@ -279,7 +278,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <div className="min-w-[1100px]">
+              <div className="min-w-[1300px]">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">

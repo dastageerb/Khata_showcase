@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -143,62 +142,64 @@ const TransactionsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Transactions</h1>
-          <p className="text-gray-500">View and manage all financial transactions</p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search transactions"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full sm:w-[250px]"
-            />
+    <div className="space-y-6 overflow-x-auto">
+      <div className="min-w-[1200px]">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Transactions</h1>
+            <p className="text-gray-500">View and manage all financial transactions</p>
           </div>
           
-          <Button onClick={handleExportData} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Excel
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search transactions"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-full sm:w-[250px]"
+              />
+            </div>
+            
+            <Button onClick={handleExportData} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export Excel
+            </Button>
+          </div>
         </div>
+        
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-3 mb-4 w-full sm:w-auto">
+            <TabsTrigger value="all">All Transactions</TabsTrigger>
+            <TabsTrigger value="customer">Customer</TabsTrigger>
+            <TabsTrigger value="company">Company</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-0">
+            <TransactionsList 
+              transactions={transactions} 
+              getEntityName={getEntityName}
+              getEntityType={getEntityType}
+            />
+          </TabsContent>
+          
+          <TabsContent value="customer" className="mt-0">
+            <TransactionsList 
+              transactions={transactions} 
+              getEntityName={getEntityName}
+              getEntityType={getEntityType}
+            />
+          </TabsContent>
+          
+          <TabsContent value="company" className="mt-0">
+            <TransactionsList 
+              transactions={transactions} 
+              getEntityName={getEntityName}
+              getEntityType={getEntityType}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
-      
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 mb-4 w-full sm:w-auto">
-          <TabsTrigger value="all">All Transactions</TabsTrigger>
-          <TabsTrigger value="customer">Customer</TabsTrigger>
-          <TabsTrigger value="company">Company</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="mt-0">
-          <TransactionsList 
-            transactions={transactions} 
-            getEntityName={getEntityName}
-            getEntityType={getEntityType}
-          />
-        </TabsContent>
-        
-        <TabsContent value="customer" className="mt-0">
-          <TransactionsList 
-            transactions={transactions} 
-            getEntityName={getEntityName}
-            getEntityType={getEntityType}
-          />
-        </TabsContent>
-        
-        <TabsContent value="company" className="mt-0">
-          <TransactionsList 
-            transactions={transactions} 
-            getEntityName={getEntityName}
-            getEntityType={getEntityType}
-          />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
@@ -229,81 +230,83 @@ const TransactionsList: React.FC<TransactionsListProps> = ({
   return (
     <Card>
       <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Entity</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Payment Mode</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Bill ID</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Updated</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transactions.map((transaction) => {
-              const entityName = getEntityName(transaction);
-              const entityType = getEntityType(transaction);
-              
-              return (
-                <TableRow key={transaction.id} className="hover:bg-muted/50">
-                  <TableCell className="whitespace-nowrap">
-                    {format(new Date(transaction.date), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{entityName}</span>
-                      <span className={`text-xs px-2 py-1 rounded w-fit ${
-                        entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+        <div className="min-w-[1400px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Entity</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Payment Mode</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Bill ID</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((transaction) => {
+                const entityName = getEntityName(transaction);
+                const entityType = getEntityType(transaction);
+                
+                return (
+                  <TableRow key={transaction.id} className="hover:bg-muted/50">
+                    <TableCell className="whitespace-nowrap">
+                      {format(new Date(transaction.date), 'MMM d, yyyy')}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{entityName}</span>
+                        <span className={`text-xs px-2 py-1 rounded w-fit ${
+                          entityType === 'Customer' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          {entityType}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                        transaction.type === 'credit' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
                       }`}>
-                        {entityType}
+                        {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
                       </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                      transaction.type === 'credit' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs">
+                        <p className="font-medium truncate">{transaction.purchase_description || 'No description'}</p>
+                        {transaction.additional_notes && (
+                          <p className="text-sm text-gray-500 mt-1 truncate">{transaction.additional_notes}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{transaction.quantity}</TableCell>
+                    <TableCell className="whitespace-nowrap">{transaction.payment_mode}</TableCell>
+                    <TableCell className={`font-bold whitespace-nowrap ${
+                      transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {transaction.type === 'credit' ? '+' : '-'} {transaction.type.toUpperCase()}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs">
-                      <p className="font-medium truncate">{transaction.purchase_description || 'No description'}</p>
-                      {transaction.additional_notes && (
-                        <p className="text-sm text-gray-500 mt-1 truncate">{transaction.additional_notes}</p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{transaction.quantity}</TableCell>
-                  <TableCell className="whitespace-nowrap">{transaction.payment_mode}</TableCell>
-                  <TableCell className={`font-bold whitespace-nowrap ${
-                    transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
-                      style: 'currency', 
-                      currency: 'PKR',
-                      currencyDisplay: 'narrowSymbol'
-                    }).format(transaction.amount)}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">{transaction.bill_id}</TableCell>
-                  <TableCell className="whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(transaction.created_at), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-sm text-gray-500">
-                    {format(new Date(transaction.updated_at), 'MMM d, yyyy')}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                      {transaction.type === 'credit' ? '+' : '-'}{new Intl.NumberFormat('en-US', { 
+                        style: 'currency', 
+                        currency: 'PKR',
+                        currencyDisplay: 'narrowSymbol'
+                      }).format(transaction.amount)}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{transaction.bill_id}</TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                      {format(new Date(transaction.created_at), 'MMM d, yyyy')}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-gray-500">
+                      {format(new Date(transaction.updated_at), 'MMM d, yyyy')}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </Card>
   );
