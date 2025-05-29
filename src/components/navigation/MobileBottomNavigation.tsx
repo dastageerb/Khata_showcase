@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Home, Users, Building, Activity, Receipt, Archive, Settings, TrendingUp } from 'lucide-react';
+import { Home, Users, Building, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -15,11 +14,7 @@ const navigationItems: NavigationItem[] = [
   { id: 'home', icon: Home, label: 'Home', path: '/' },
   { id: 'customers', icon: Users, label: 'Customers', path: '/customers' },
   { id: 'companies', icon: Building, label: 'Companies', path: '/companies' },
-  { id: 'transactions', icon: Activity, label: 'Transactions', path: '/transactions' },
-  { id: 'bill', icon: Receipt, label: 'Bill', path: '/bill' },
-  { id: 'sales', icon: TrendingUp, label: 'Sales', path: '/sales' },
-  { id: 'history', icon: Archive, label: 'History', path: '/billing-history' },
-  { id: 'settings', icon: Settings, label: 'Settings', path: '/settings' },
+  { id: 'transactions', icon: Activity, label: 'Transactions', path: '/transactions' }
 ];
 
 interface MobileBottomNavigationProps {
@@ -32,13 +27,10 @@ const MobileBottomNavigation: React.FC<MobileBottomNavigationProps> = ({ current
 
   if (!isMobile) return null;
 
-  // Show only 4 main items on mobile
-  const mobileItems = navigationItems.slice(0, 4);
-
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 md:hidden">
       <div className="flex justify-around items-center py-2">
-        {mobileItems.map((item) => {
+        {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPath === item.path || currentPath.startsWith(item.path + '/');
           

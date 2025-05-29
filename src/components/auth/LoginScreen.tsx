@@ -22,17 +22,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
     setTitleClickCount(newCount);
     
     if (newCount === 5) {
-      toast({
-        title: "Easter Egg Activated! 🥚",
-        description: "Signup option is now available!",
-      });
       onShowSignup();
       setTitleClickCount(0);
-    } else if (newCount > 3) {
-      toast({
-        title: `${5 - newCount} more taps...`,
-        description: "Keep tapping to unlock something special!",
-      });
     }
   };
 
@@ -76,18 +67,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
               </h1>
               <p className="text-base text-gray-600 mt-3 font-medium font-inter">Financial Management Portal</p>
             </div>
-            {titleClickCount > 3 && titleClickCount < 5 && (
-              <div className="flex justify-center space-x-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      i < titleClickCount ? 'bg-primary animate-bounce' : 'bg-gray-200'
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
           </CardHeader>
           <CardContent className="space-y-8 px-8 pb-8">
             <form onSubmit={handleLogin} className="space-y-6">
@@ -147,7 +126,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 font-inter">💡 Tip: Tap the title 5 times for signup!</p>
             </div>
           </CardContent>
         </Card>
