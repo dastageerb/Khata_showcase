@@ -299,268 +299,248 @@ const BillPage: React.FC = () => {
         <p className="text-gray-500 text-left text-sm">Create new bills for customers</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Shop Information - Reduced width */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Shop Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div>
-                <p className="font-medium text-sm">{state.settings.shop_name}</p>
-                <p className="text-xs text-gray-600">{state.settings.shop_address}</p>
-                <p className="text-xs text-gray-600">Contact: {state.settings.admin_phone}</p>
-              </div>
-              <Separator />
-              <div>
-                <p className="text-xs text-gray-500">Next Bill Number</p>
-                <p className="font-bold text-sm">AMR-{state.settings.last_bill_serial + 1}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Bill Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="customer-name" className="text-sm">Customer Name</Label>
+              <Input
+                id="customer-name"
+                placeholder="Enter customer name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Date</Label>
+              <Input
+                value={format(new Date(), 'yyyy-MM-dd')}
+                readOnly
+                className="bg-gray-50 text-sm"
+              />
+            </div>
+          </div>
 
-        {/* Bill Form - Increased width */}
-        <div className="lg:col-span-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Bill Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="customer-name" className="text-sm">Customer Name</Label>
-                  <Input
-                    id="customer-name"
-                    placeholder="Enter customer name"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="text-sm"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm">Date</Label>
-                  <Input
-                    value={format(new Date(), 'yyyy-MM-dd')}
-                    readOnly
-                    className="bg-gray-50 text-sm"
-                  />
-                </div>
-              </div>
+          <Separator />
 
-              <Separator />
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-base font-medium">Bill Items</h3>
-                  <Button onClick={addBillItem} size="sm" variant="outline" className="text-xs">
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Item
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {billItems.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end">
-                      <div className="col-span-5 relative">
-                        <Label className="text-xs">Product Name</Label>
-                        <Input
-                          placeholder="Enter product name"
-                          value={item.product_name}
-                          onChange={(e) => updateBillItem(index, 'product_name', e.target.value)}
-                          className="text-sm"
-                        />
-                        {item.product_name && getProductSuggestions(item.product_name).length > 0 && (
-                          <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1">
-                            {getProductSuggestions(item.product_name).map((product) => (
-                              <div
-                                key={product.id}
-                                className="p-2 hover:bg-gray-50 cursor-pointer text-sm"
-                                onClick={() => selectProduct(index, product)}
-                              >
-                                <div className="font-medium">{product.name}</div>
-                                <div className="text-xs text-gray-500">
-                                  Last Price: {new Intl.NumberFormat('en-US', { 
-                                    style: 'currency', 
-                                    currency: 'PKR',
-                                    currencyDisplay: 'narrowSymbol'
-                                  }).format(product.last_price)}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs">Quantity</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => updateBillItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs">Price</Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.price}
-                          onChange={(e) => updateBillItem(index, 'price', parseFloat(e.target.value) || 0)}
-                          className="text-sm"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs">Amount</Label>
-                        <Input
-                          value={new Intl.NumberFormat('en-US', { 
-                            style: 'currency', 
-                            currency: 'PKR',
-                            currencyDisplay: 'narrowSymbol'
-                          }).format(item.amount)}
-                          readOnly
-                          className="bg-gray-50 text-sm"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        {billItems.length > 1 && (
-                          <Button
-                            onClick={() => removeBillItem(index)}
-                            size="sm"
-                            variant="outline"
-                            className="p-1 h-8 w-8"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator />
-
-                <div className="flex justify-between items-center">
-                  <span className="text-base font-medium">Total Amount:</span>
-                  <span className="text-lg font-bold text-primary">
-                    {new Intl.NumberFormat('en-US', { 
-                      style: 'currency', 
-                      currency: 'PKR',
-                      currencyDisplay: 'narrowSymbol'
-                    }).format(calculateTotal())}
-                  </span>
-                </div>
-
-                <Button onClick={generateBill} className="w-full text-sm">
-                  Generate Bill
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Print Dialog */}
-      <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <DialogTitle className="text-base">Bill Preview</DialogTitle>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm" onClick={handlePrint} className="text-xs">
-                <Printer className="h-3 w-3 mr-1" />
-                Print
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="text-xs">
-                <Download className="h-3 w-3 mr-1" />
-                PDF
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-medium">Bill Items</h3>
+              <Button onClick={addBillItem} size="sm" variant="outline" className="text-xs">
+                <Plus className="h-3 w-3 mr-1" />
+                Add Item
               </Button>
             </div>
-          </DialogHeader>
-          <div id="bill-print-content" className="border rounded-lg p-4 space-y-4 bg-white text-sm">
-            {generatedBill && (
-              <>
-                <div className="text-center space-y-1">
-                  <h2 className="text-lg font-bold">{state.settings.shop_name}</h2>
-                  <p className="text-sm">{state.settings.shop_address}</p>
-                  <p className="text-sm">Contact: {state.settings.admin_phone}</p>
-                </div>
-                
-                <Separator />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-medium text-gray-500">Bill #:</p>
-                    <p className="font-semibold text-sm">{generatedBill.serial_no}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-medium text-gray-500">Date:</p>
-                    <p className="text-sm">{format(new Date(generatedBill.date), 'PPP')}</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-gray-500">Customer:</p>
-                  <p className="font-semibold text-sm">{generatedBill.customer_name}</p>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
-                    <div className="col-span-5">Item</div>
-                    <div className="col-span-2 text-center">Qty</div>
-                    <div className="col-span-2 text-right">Rate</div>
-                    <div className="col-span-3 text-right">Amount</div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    {generatedBillItems.map((item: BillItem) => (
-                      <div key={item.id} className="grid grid-cols-12 gap-2 text-xs">
-                        <div className="col-span-5">{item.product_name}</div>
-                        <div className="col-span-2 text-center">{item.quantity}</div>
-                        <div className="col-span-2 text-right">
-                          {new Intl.NumberFormat('en-US', { 
-                            style: 'currency', 
-                            currency: 'PKR',
-                            currencyDisplay: 'narrowSymbol'
-                          }).format(item.price)}
-                        </div>
-                        <div className="col-span-3 text-right">
-                          {new Intl.NumberFormat('en-US', { 
-                            style: 'currency', 
-                            currency: 'PKR',
-                            currencyDisplay: 'narrowSymbol'
-                          }).format(item.amount)}
-                        </div>
+
+            <div className="space-y-3">
+              {billItems.map((item, index) => (
+                <div key={index} className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-5 relative">
+                    <Label className="text-xs">Product Name</Label>
+                    <Input
+                      placeholder="Enter product name"
+                      value={item.product_name}
+                      onChange={(e) => updateBillItem(index, 'product_name', e.target.value)}
+                      className="text-sm"
+                    />
+                    {item.product_name && getProductSuggestions(item.product_name).length > 0 && (
+                      <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1">
+                        {getProductSuggestions(item.product_name).map((product) => (
+                          <div
+                            key={product.id}
+                            className="p-2 hover:bg-gray-50 cursor-pointer text-sm"
+                            onClick={() => selectProduct(index, product)}
+                          >
+                            <div className="font-medium">{product.name}</div>
+                            <div className="text-xs text-gray-500">
+                              Last Price: {new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'PKR',
+                                currencyDisplay: 'narrowSymbol'
+                              }).format(product.last_price)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                  
-                  <Separator />
-                  
-                  <div className="grid grid-cols-12 gap-2 font-bold text-sm">
-                    <div className="col-span-9 text-right">Total:</div>
-                    <div className="col-span-3 text-right">
-                      {new Intl.NumberFormat('en-US', { 
+                  <div className="col-span-2">
+                    <Label className="text-xs">Quantity</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateBillItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs">Price</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.price}
+                      onChange={(e) => updateBillItem(index, 'price', parseFloat(e.target.value) || 0)}
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs">Amount</Label>
+                    <Input
+                      value={new Intl.NumberFormat('en-US', { 
                         style: 'currency', 
                         currency: 'PKR',
                         currencyDisplay: 'narrowSymbol'
-                      }).format(generatedBill.total_amount)}
-                    </div>
+                      }).format(item.amount)}
+                      readOnly
+                      className="bg-gray-50 text-sm"
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    {billItems.length > 1 && (
+                      <Button
+                        onClick={() => removeBillItem(index)}
+                        size="sm"
+                        variant="outline"
+                        className="p-1 h-8 w-8"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-                
-                <div className="text-center pt-4 space-y-1 text-xs">
-                  <p>Thank you for your business!</p>
-                  <p>For any inquiries, please contact us at {state.settings.admin_phone}</p>
+              ))}
+            </div>
+
+            <Separator />
+
+            <div className="flex justify-between items-center">
+              <span className="text-base font-medium">Total Amount:</span>
+              <span className="text-lg font-bold text-primary">
+                {new Intl.NumberFormat('en-US', { 
+                  style: 'currency', 
+                  currency: 'PKR',
+                  currencyDisplay: 'narrowSymbol'
+                }).format(calculateTotal())}
+              </span>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <Button onClick={generateBill} size="lg" className="font-semibold">
+                Generate Bill
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Print Dialog */}
+      <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              Bill Generated Successfully
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPrintDialogOpen(false)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex gap-2 justify-end">
+              <Button onClick={handlePrint} variant="outline" size="sm">
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
+              <Button onClick={handleDownloadPDF} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+            </div>
+
+            <div id="bill-print-content" className="border rounded-lg p-6 bg-white">
+              {generatedBill && (
+                <div className="space-y-4">
+                  <div className="text-center border-b pb-4">
+                    <h2 className="text-xl font-bold">{state.settings.shop_name}</h2>
+                    <p className="text-sm text-gray-600">{state.settings.shop_address}</p>
+                    <p className="text-sm text-gray-600">Contact: {state.settings.admin_phone}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p><strong>Bill No:</strong> {generatedBill.serial_no}</p>
+                      <p><strong>Customer:</strong> {generatedBill.customer_name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p><strong>Date:</strong> {format(new Date(generatedBill.date), 'dd/MM/yyyy')}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2">Item</th>
+                          <th className="text-center py-2">Qty</th>
+                          <th className="text-right py-2">Price</th>
+                          <th className="text-right py-2">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {generatedBillItems.map((item) => (
+                          <tr key={item.id} className="border-b">
+                            <td className="py-2">{item.product_name}</td>
+                            <td className="text-center py-2">{item.quantity}</td>
+                            <td className="text-right py-2">
+                              {new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'PKR',
+                                currencyDisplay: 'narrowSymbol'
+                              }).format(item.price)}
+                            </td>
+                            <td className="text-right py-2">
+                              {new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'PKR',
+                                currencyDisplay: 'narrowSymbol'
+                              }).format(item.amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold">Total:</span>
+                      <span className="text-lg font-bold">
+                        {new Intl.NumberFormat('en-US', { 
+                          style: 'currency', 
+                          currency: 'PKR',
+                          currencyDisplay: 'narrowSymbol'
+                        }).format(generatedBill.total_amount)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-center text-sm text-gray-500 border-t pt-4">
+                    <p>Thank you for your business!</p>
+                  </div>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

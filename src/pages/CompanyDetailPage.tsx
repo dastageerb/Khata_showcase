@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -155,8 +156,8 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
   const balance = calculateCompanyBalance(company.id);
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-100 p-4 md:p-8 overflow-x-auto">
+      <div className="min-w-[1200px]">
         {/* Header */}
         <div className="flex items-center mb-6 md:mb-8">
           <Button 
@@ -170,9 +171,9 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
         </div>
 
         {/* Company Profile Card */}
-        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center">
-            <div className="flex items-center mb-4 md:mb-0 md:mr-8">
+        <div className="bg-white shadow-lg rounded-xl p-6 mb-6 md:mb-8 min-w-[1150px]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center min-w-[400px]">
               <div className="bg-primary p-3 rounded-full text-white mr-4">
                 <Building className="h-6 w-6" />
               </div>
@@ -183,7 +184,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
               </div>
             </div>
             
-            <div className="flex-grow text-center mb-4 md:mb-0">
+            <div className="text-center min-w-[200px]">
               <p className="text-sm text-gray-500 mb-1">Balance</p>
               <p className={`text-3xl font-bold ${
                 balance >= 0 ? 'text-green-600' : 'text-red-600'
@@ -192,7 +193,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
               </p>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 min-w-[200px] justify-end">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
@@ -240,7 +241,7 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white shadow-lg rounded-xl p-6">
+        <div className="bg-white shadow-lg rounded-xl p-6 min-w-[1150px]">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4 md:mb-0">
               Transaction History ({companyTransactions.length})
@@ -278,71 +279,73 @@ const CompanyDetailPage: React.FC<CompanyDetailPageProps> = ({ companyId, onNavi
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Date</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Type</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Description</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Payment</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Qty</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Amount</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Bill ID</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Created</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium">Notes</TableHead>
-                    <TableHead className="px-6 py-3 text-slate-600 font-medium text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {companyTransactions.map((transaction) => (
-                    <TableRow key={transaction.id} className="hover:bg-slate-50 border-b">
-                      <TableCell className="px-6 py-4 whitespace-nowrap">
-                        {format(new Date(transaction.date), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          transaction.type === 'credit' 
-                            ? 'bg-green-100 text-green-700' 
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {transaction.type === 'credit' ? '+' : '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 font-medium text-gray-900 max-w-32">
-                        <div className="truncate" title={transaction.purchase_description || 'No description'}>
-                          {transaction.purchase_description || 'No description'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-6 py-4">{transaction.payment_mode}</TableCell>
-                      <TableCell className="px-6 py-4">{transaction.quantity}</TableCell>
-                      <TableCell className={`px-6 py-4 font-medium ${
-                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {transaction.type === 'credit' ? '+' : '-'}Rs {transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell className="px-6 py-4">{transaction.bill_id}</TableCell>
-                      <TableCell className="px-6 py-4 text-sm text-gray-500">
-                        {format(new Date(transaction.created_at), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 max-w-32">
-                        <div className="truncate" title={transaction.additional_notes || 'No notes'}>
-                          {transaction.additional_notes || 'No notes'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-center">
-                        <Button
-                          variant="ghost"
-                          className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
-                          title="Edit Transaction"
-                          onClick={() => handleEditTransaction(transaction)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+              <div className="min-w-[1100px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Date</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[80px]">Type</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[150px]">Description</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Payment</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[80px]">Qty</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Amount</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Bill ID</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[120px]">Created</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium min-w-[150px]">Notes</TableHead>
+                      <TableHead className="px-6 py-3 text-slate-600 font-medium text-center min-w-[100px]">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {companyTransactions.map((transaction) => (
+                      <TableRow key={transaction.id} className="hover:bg-slate-50 border-b">
+                        <TableCell className="px-6 py-4 whitespace-nowrap">
+                          {format(new Date(transaction.date), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            transaction.type === 'credit' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {transaction.type === 'credit' ? '+' : '-'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-6 py-4 font-medium text-gray-900">
+                          <div className="max-w-[130px] truncate" title={transaction.purchase_description || 'No description'}>
+                            {transaction.purchase_description || 'No description'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4">{transaction.payment_mode}</TableCell>
+                        <TableCell className="px-6 py-4">{transaction.quantity}</TableCell>
+                        <TableCell className={`px-6 py-4 font-medium ${
+                          transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.type === 'credit' ? '+' : '-'}Rs {transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="px-6 py-4">{transaction.bill_id}</TableCell>
+                        <TableCell className="px-6 py-4 text-sm text-gray-500">
+                          {format(new Date(transaction.created_at), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell className="px-6 py-4">
+                          <div className="max-w-[130px] truncate" title={transaction.additional_notes || 'No notes'}>
+                            {transaction.additional_notes || 'No notes'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-center">
+                          <Button
+                            variant="ghost"
+                            className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+                            title="Edit Transaction"
+                            onClick={() => handleEditTransaction(transaction)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </div>
