@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import FloatingNavigation from '@/components/navigation/FloatingNavigation';
 import MobileBottomNavigation from '@/components/navigation/MobileBottomNavigation';
@@ -38,6 +39,8 @@ const MainLayout: React.FC = () => {
   const handleNavigate = (path: string, params?: { [key: string]: string }) => {
     setCurrentPath(path);
     setCurrentParams(params || {});
+    // Update window location for ContactsPage routing
+    window.history.pushState({}, '', path);
   };
 
   const renderContent = () => {

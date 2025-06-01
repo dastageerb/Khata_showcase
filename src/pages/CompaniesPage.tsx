@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,171 +87,175 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="space-y-8 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center space-x-3">
-            <Building2 className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Companies</h1>
-          </div>
-          <p className="text-lg text-gray-600">Manage your business partnerships and suppliers</p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search companies..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full sm:w-[280px] h-11 text-base"
-            />
+    <div className="w-full min-h-screen overflow-x-auto">
+      <div className="min-w-[320px] space-y-4 p-2 sm:p-4 font-sans">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <Building2 className="w-6 h-6 text-primary" />
+              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Companies</h1>
+            </div>
+            <p className="text-sm text-gray-600">Manage your business partnerships and suppliers</p>
           </div>
           
-          <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto h-11 px-6 font-semibold">
-            <Plus className="h-5 w-5 mr-2" />
-            Add Company
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+              <Input
+                placeholder="Search companies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 w-full sm:w-[200px] h-8 text-xs"
+              />
+            </div>
+            
+            <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto h-8 px-4 font-medium text-xs">
+              <Plus className="h-3 w-3 mr-1" />
+              Add Company
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold text-gray-900">
-            Company Directory ({filteredCompanies.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredCompanies.length === 0 ? (
-            <div className="text-center py-12">
-              <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-lg text-gray-500 font-medium">
-                {searchQuery ? 'No companies found matching your search' : 'No companies found'}
-              </p>
-              <p className="text-sm text-gray-400 mt-1">
-                {!searchQuery && 'Add your first company to get started'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-gray-200">
-                    <TableHead className="font-semibold text-gray-700 text-sm">Company Name</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-sm">Contact</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-sm">Address</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-sm">Balance</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-sm">Created</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-sm">Updated</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-sm">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCompanies.map((company) => {
-                    const balance = calculateCompanyBalance(company.id);
-                    
-                    return (
-                      <TableRow 
-                        key={company.id} 
-                        className="hover:bg-gray-50 cursor-pointer border-gray-100 transition-colors"
-                        onClick={() => handleCompanyClick(company.id)}
-                      >
-                        <TableCell className="font-semibold text-gray-900 text-base">{company.name}</TableCell>
-                        <TableCell className="font-medium text-gray-700">{company.contact_number}</TableCell>
-                        <TableCell className="max-w-xs">
-                          <div className="truncate text-gray-600">{company.address || 'Not provided'}</div>
-                        </TableCell>
-                        <TableCell className={`font-bold text-lg ${
-                          balance >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {new Intl.NumberFormat('en-US', { 
-                            style: 'currency', 
-                            currency: 'PKR',
-                            currencyDisplay: 'narrowSymbol'
-                          }).format(balance)}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-500 font-medium">
-                          {format(new Date(company.created_at), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-500 font-medium">
-                          {format(new Date(company.updated_at), 'MMM d, yyyy')}
-                        </TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCompanyClick(company.id);
-                            }}
-                            className="h-9 w-9 p-0 hover:bg-primary/10"
-                          >
-                            <ChevronRight className="h-4 w-4 text-primary" />
-                          </Button>
-                        </TableCell>
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold text-gray-900">
+              Company Directory ({filteredCompanies.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {filteredCompanies.length === 0 ? (
+              <div className="text-center py-8">
+                <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 font-medium">
+                  {searchQuery ? 'No companies found matching your search' : 'No companies found'}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {!searchQuery && 'Add your first company to get started'}
+                </p>
+              </div>
+            ) : (
+              <div className="w-full overflow-x-auto">
+                <div className="min-w-[1200px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-gray-200">
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[150px] sticky left-0 bg-white z-10 border-r">Company Name</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Contact</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[180px]">Address</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Balance</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[100px]">Created</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[100px]">Updated</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[80px] sticky right-0 bg-white z-10 border-l">Action</TableHead>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCompanies.map((company) => {
+                        const balance = calculateCompanyBalance(company.id);
+                        
+                        return (
+                          <TableRow 
+                            key={company.id} 
+                            className="hover:bg-gray-50 cursor-pointer border-gray-100 transition-colors"
+                            onClick={() => handleCompanyClick(company.id)}
+                          >
+                            <TableCell className="font-semibold text-gray-900 text-xs sticky left-0 bg-white z-10 border-r">{company.name}</TableCell>
+                            <TableCell className="font-medium text-gray-700 text-xs">{company.contact_number}</TableCell>
+                            <TableCell className="max-w-xs">
+                              <div className="truncate text-gray-600 text-xs">{company.address || 'Not provided'}</div>
+                            </TableCell>
+                            <TableCell className={`font-bold text-xs ${
+                              balance >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {new Intl.NumberFormat('en-US', { 
+                                style: 'currency', 
+                                currency: 'PKR',
+                                currencyDisplay: 'narrowSymbol'
+                              }).format(balance)}
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-500 font-medium">
+                              {format(new Date(company.created_at), 'MMM d, yyyy')}
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-500 font-medium">
+                              {format(new Date(company.updated_at), 'MMM d, yyyy')}
+                            </TableCell>
+                            <TableCell className="sticky right-0 bg-white z-10 border-l">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCompanyClick(company.id);
+                                }}
+                                className="h-6 w-6 p-0 hover:bg-primary/10"
+                              >
+                                <ChevronRight className="h-3 w-3 text-primary" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Company Form Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Add New Company</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-3">
-              <Label htmlFor="name" className="text-sm font-semibold text-gray-700">Company Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                placeholder="Enter company name"
-                required
-                className="h-11 text-base"
-              />
-            </div>
+        {/* Company Form Dialog */}
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold">Add New Company</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-xs font-semibold text-gray-700">Company Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Enter company name"
+                  required
+                  className="h-8 text-xs"
+                />
+              </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="contact" className="text-sm font-semibold text-gray-700">Contact Number</Label>
-              <Input
-                id="contact"
-                value={formData.contact_number}
-                onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
-                placeholder="Enter contact number"
-                required
-                className="h-11 text-base"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact" className="text-xs font-semibold text-gray-700">Contact Number</Label>
+                <Input
+                  id="contact"
+                  value={formData.contact_number}
+                  onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
+                  placeholder="Enter contact number"
+                  required
+                  className="h-8 text-xs"
+                />
+              </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="address" className="text-sm font-semibold text-gray-700">Address (Optional)</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
-                placeholder="Enter address"
-                className="h-11 text-base"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-xs font-semibold text-gray-700">Address (Optional)</Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  placeholder="Enter address"
+                  className="h-8 text-xs"
+                />
+              </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)} className="font-medium">
-                Cancel
-              </Button>
-              <Button type="submit" disabled={state.isLoading} className="font-semibold">
-                {state.isLoading ? 'Adding...' : 'Add Company'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)} className="font-medium text-xs h-8">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={state.isLoading} className="font-semibold text-xs h-8">
+                  {state.isLoading ? 'Adding...' : 'Add Company'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };
