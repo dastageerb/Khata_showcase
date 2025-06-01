@@ -82,7 +82,7 @@ const MainLayout: React.FC = () => {
         />
       )}
       
-      <div className={`flex-1 transition-all duration-300 flex flex-col ${
+      <div className={`flex-1 transition-all duration-300 flex flex-col overflow-hidden ${
         !isMobile ? (isNavExpanded ? 'ml-48 sm:ml-52' : 'ml-4 sm:ml-16') : ''
       }`}>
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40 shrink-0">
@@ -106,8 +106,8 @@ const MainLayout: React.FC = () => {
           </div>
         </header>
         
-        <main className={`container mx-auto px-4 py-2 flex-1 min-h-0 ${isMobile ? 'pb-16' : ''}`}>
-          <div className="animate-fade-in h-full">
+        <main className={`flex-1 min-h-0 overflow-hidden ${isMobile ? 'pb-16' : ''}`}>
+          <div className="animate-fade-in h-full overflow-auto">
             {renderContent()}
           </div>
         </main>
