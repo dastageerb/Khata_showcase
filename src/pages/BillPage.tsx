@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,7 @@ const BillPage: React.FC = () => {
   });
 
   const filteredBills = state.bills.filter(bill => {
-    const customer = state.customers.find(c => c.id === bill.customer_id);
-    const customerName = customer ? customer.name.toLowerCase() : '';
-
-    return customerName.includes(searchQuery.toLowerCase());
+    return bill.customer_name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const calculateTotal = (items: any[]) => {
@@ -49,16 +47,24 @@ const BillPage: React.FC = () => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     setTimeout(() => {
+      const selectedCustomer = state.customers.find(c => c.id === formData.customer_id);
+      const customerName = selectedCustomer ? selectedCustomer.name : 'Unknown';
+      
+      // Generate new serial number
+      const newSerialNo = `AMR-${state.settings.last_bill_serial + 1}`;
+      
       const newBill = {
         id: generateId('bill'),
-        customer_id: formData.customer_id,
-        items: formData.items,
-        notes: formData.notes,
+        serial_no: newSerialNo,
+        customer_name: customerName,
+        admin_phone: state.settings.admin_phone,
+        date: new Date(),
         total_amount: calculateTotal(formData.items),
         created_by: state.currentUser?.id || 'system',
         created_at: new Date(),
         updated_at: new Date(),
         updated_by: state.currentUser?.id || 'system',
+        status: 'completed',
         history: []
       };
 
@@ -72,9 +78,46 @@ const BillPage: React.FC = () => {
 
       dispatch({ type: 'ADD_BILL', payload: newBill });
 
+      // Add bill items
+      formData.items.forEach(item => {
+        const billItem = {
+          id: generateId('billitem'),
+          bill_id: newBill.id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          price: item.unit_price,
+          amount: item.quantity * item.unit_price,
+          created_at: new Date(),
+          updated_at: new Date(),
+          created_by: state.currentUser?.id || 'system',
+          updated_by: state.currentUser?.id || 'system',
+          history: []
+        };
+        
+        addHistoryEntry(
+          billItem,
+          'created',
+          state.currentUser?.id || 'system',
+          state.currentUser?.name || 'System',
+          'Bill item added'
+        );
+        
+        dispatch({ type: 'ADD_BILL_ITEM', payload: billItem });
+      });
+
+      // Update settings with new serial number
+      const updatedSettings = {
+        ...state.settings,
+        last_bill_serial: state.settings.last_bill_serial + 1,
+        updated_at: new Date(),
+        updated_by: state.currentUser?.id || 'system'
+      };
+      
+      dispatch({ type: 'UPDATE_SETTINGS', payload: updatedSettings });
+
       toast({
         title: "Bill Generated",
-        description: `Bill has been generated for customer`
+        description: `Bill ${newSerialNo} has been generated for ${customerName}`
       });
 
       setIsFormOpen(false);
@@ -282,20 +325,20 @@ const BillPage: React.FC = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-gray-200">
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Serial No</TableHead>
                         <TableHead className="font-semibold text-gray-700 text-xs min-w-[150px]">Customer</TableHead>
                         <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Total Amount</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Created</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Date</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[80px]">Status</TableHead>
                         <TableHead className="font-semibold text-gray-700 text-xs min-w-[80px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredBills.map((bill) => {
-                        const customer = state.customers.find(c => c.id === bill.customer_id);
-                        const customerName = customer ? customer.name : 'Unknown';
-
                         return (
                           <TableRow key={bill.id} className="hover:bg-gray-50 cursor-pointer border-gray-100 transition-colors">
-                            <TableCell className="font-semibold text-gray-900 text-xs">{customerName}</TableCell>
+                            <TableCell className="font-semibold text-gray-900 text-xs">{bill.serial_no}</TableCell>
+                            <TableCell className="font-semibold text-gray-900 text-xs">{bill.customer_name}</TableCell>
                             <TableCell className="font-medium text-gray-700 text-xs">
                               {new Intl.NumberFormat('en-US', { 
                                 style: 'currency', 
@@ -304,7 +347,16 @@ const BillPage: React.FC = () => {
                               }).format(bill.total_amount)}
                             </TableCell>
                             <TableCell className="text-xs text-gray-500 font-medium">
-                              {format(new Date(bill.created_at), 'MMM d, yyyy')}
+                              {format(new Date(bill.date), 'MMM d, yyyy')}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                bill.status === 'completed' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {bill.status}
+                              </span>
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
