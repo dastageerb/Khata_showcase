@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, ChevronRight, Building2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Plus, Search, ChevronRight, Building2, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import EditCompanyDialog from '@/components/dialogs/EditCompanyDialog';
 
 interface CompaniesPageProps {
   onNavigate: (path: string, params?: { [key: string]: string }) => void;
@@ -20,6 +22,8 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
   const { toast } = useToast();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -86,6 +90,42 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
     onNavigate(`/companies/${companyId}`, { companyId });
   };
 
+  const handleEditCompany = (company: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedCompany(company);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteCompany = (company: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (window.confirm(`Are you sure you want to delete ${company.name}?`)) {
+      dispatch({ type: 'DELETE_COMPANY', payload: company.id });
+      toast({
+        title: "Company Deleted",
+        description: `${company.name} has been removed from your company list`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateCompany = (updatedCompany: any) => {
+    dispatch({ type: 'UPDATE_COMPANY', payload: updatedCompany });
+    
+    addHistoryEntry(
+      updatedCompany,
+      'updated',
+      state.currentUser?.id || 'system',
+      state.currentUser?.name || 'System',
+      'Company information updated'
+    );
+
+    toast({
+      title: "Company Updated",
+      description: `${updatedCompany.name} has been updated successfully`
+    });
+  };
+
   return (
     <div className="w-full min-h-screen overflow-x-auto">
       <div className="min-w-[320px] space-y-4 p-2 sm:p-4 font-sans">
@@ -145,7 +185,7 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
                         <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Balance</TableHead>
                         <TableHead className="font-semibold text-gray-700 text-xs min-w-[100px]">Created</TableHead>
                         <TableHead className="font-semibold text-gray-700 text-xs min-w-[100px]">Updated</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[80px] sticky right-0 bg-white z-10 border-l">Action</TableHead>
+                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[80px] sticky right-0 bg-white z-10 border-l">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -179,17 +219,31 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
                               {format(new Date(company.updated_at), 'MMM d, yyyy')}
                             </TableCell>
                             <TableCell className="sticky right-0 bg-white z-10 border-l">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCompanyClick(company.id);
-                                }}
-                                className="h-6 w-6 p-0 hover:bg-primary/10"
-                              >
-                                <ChevronRight className="h-3 w-3 text-primary" />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="h-6 w-6 p-0 hover:bg-primary/10"
+                                  >
+                                    <MoreVertical className="h-3 w-3 text-primary" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="min-w-[140px]">
+                                  <DropdownMenuItem onClick={(e) => handleEditCompany(company, e)} className="text-xs">
+                                    <Edit className="mr-2 h-3 w-3" />
+                                    Edit Company
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={(e) => handleDeleteCompany(company, e)} 
+                                    className="text-xs text-red-600 focus:text-red-600"
+                                  >
+                                    <Trash2 className="mr-2 h-3 w-3" />
+                                    Delete Company
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </TableCell>
                           </TableRow>
                         );
@@ -255,6 +309,17 @@ const CompaniesPage: React.FC<CompaniesPageProps> = ({ onNavigate }) => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Company Dialog */}
+        <EditCompanyDialog
+          company={selectedCompany}
+          isOpen={isEditDialogOpen}
+          onClose={() => {
+            setIsEditDialogOpen(false);
+            setSelectedCompany(null);
+          }}
+          onUpdate={handleUpdateCompany}
+        />
       </div>
     </div>
   );
