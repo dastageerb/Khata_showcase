@@ -6,26 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Search, Receipt, MoreVertical, Edit, Trash2, FileText, Download } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { format } from 'date-fns';
+import { Plus, Receipt, Trash2 } from 'lucide-react';
 
 const BillPage: React.FC = () => {
   const { state, dispatch, generateId, addHistoryEntry } = useApp();
   const { toast } = useToast();
   
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
-    customer_id: '',
+    customer_name: '',
     items: [{ product_name: '', quantity: 1, unit_price: 0 }],
     notes: ''
-  });
-
-  const filteredBills = state.bills.filter(bill => {
-    return bill.customer_name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const calculateTotal = (items: any[]) => {
@@ -35,10 +25,10 @@ const BillPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.customer_id || formData.items.length === 0) {
+    if (!formData.customer_name || formData.items.length === 0) {
       toast({
         title: "Missing Information",
-        description: "Customer and items are required",
+        description: "Customer name and items are required",
         variant: "destructive"
       });
       return;
@@ -47,16 +37,13 @@ const BillPage: React.FC = () => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     setTimeout(() => {
-      const selectedCustomer = state.customers.find(c => c.id === formData.customer_id);
-      const customerName = selectedCustomer ? selectedCustomer.name : 'Unknown';
-      
       // Generate new serial number
       const newSerialNo = `AMR-${state.settings.last_bill_serial + 1}`;
       
       const newBill = {
         id: generateId('bill'),
         serial_no: newSerialNo,
-        customer_name: customerName,
+        customer_name: formData.customer_name,
         admin_phone: state.settings.admin_phone,
         date: new Date(),
         total_amount: calculateTotal(formData.items),
@@ -117,11 +104,10 @@ const BillPage: React.FC = () => {
 
       toast({
         title: "Bill Generated",
-        description: `Bill ${newSerialNo} has been generated for ${customerName}`
+        description: `Bill ${newSerialNo} has been generated for ${formData.customer_name}`
       });
 
-      setIsFormOpen(false);
-      setFormData({ customer_id: '', items: [{ product_name: '', quantity: 1, unit_price: 0 }], notes: '' });
+      setFormData({ customer_name: '', items: [{ product_name: '', quantity: 1, unit_price: 0 }], notes: '' });
       dispatch({ type: 'SET_LOADING', payload: false });
     }, 1000);
   };
@@ -148,88 +134,63 @@ const BillPage: React.FC = () => {
   return (
     <div className="w-full min-h-screen overflow-x-auto">
       <div className="min-w-[320px] space-y-4 p-2 sm:p-4 font-sans">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <Receipt className="w-6 h-6 text-primary" />
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">Bills</h1>
-            </div>
-            <p className="text-sm text-gray-600">Manage your bills</p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
-              <Input
-                placeholder="Search bills..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 w-full sm:w-[200px] h-8 text-xs"
-              />
-            </div>
-            
-            <Button onClick={() => setIsFormOpen(true)} className="w-full sm:w-auto h-8 px-4 font-medium text-xs">
-              <Plus className="h-3 w-3 mr-1" />
-              Generate Bill
-            </Button>
-          </div>
+        <div className="flex items-center space-x-2 mb-6">
+          <Receipt className="w-6 h-6 text-primary" />
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Generate Bill</h1>
         </div>
 
-        {/* Bill Form Dialog */}
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold">Generate New Bill</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <Card className="border-0 shadow-lg max-w-4xl">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-gray-900">
+              New Bill Form
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="customer" className="text-xs font-semibold text-gray-700">Customer</Label>
-                <select
+                <Label htmlFor="customer" className="text-sm font-semibold text-gray-700">Customer Name</Label>
+                <Input
                   id="customer"
-                  value={formData.customer_id}
-                  onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                  className="w-full h-8 text-xs border rounded-md px-2 py-1"
+                  value={formData.customer_name}
+                  onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                  placeholder="Enter customer name"
+                  className="h-10 text-sm"
                   required
-                >
-                  <option value="">Select a customer</option>
-                  {state.customers.map(customer => (
-                    <option key={customer.id} value={customer.id}>{customer.name}</option>
-                  ))}
-                </select>
+                />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-700">Bill Items</Label>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="space-y-4">
+                <Label className="text-sm font-semibold text-gray-700">Bill Items</Label>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {formData.items.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-end p-2 border rounded-lg">
+                    <div key={index} className="flex gap-3 items-end p-4 border rounded-lg bg-gray-50">
                       <div className="flex-1">
-                        <Label htmlFor={`product-${index}`} className="text-xs text-gray-600">Product</Label>
+                        <Label htmlFor={`product-${index}`} className="text-sm text-gray-600">Product Name</Label>
                         <Input
                           id={`product-${index}`}
                           value={item.product_name}
                           onChange={(e) => updateItem(index, 'product_name', e.target.value)}
                           placeholder="Enter product name"
-                          className="h-8 text-xs"
+                          className="h-10 text-sm mt-1"
                           required
                         />
                       </div>
                       
-                      <div className="w-20">
-                        <Label htmlFor={`quantity-${index}`} className="text-xs text-gray-600">Qty</Label>
+                      <div className="w-24">
+                        <Label htmlFor={`quantity-${index}`} className="text-sm text-gray-600">Quantity</Label>
                         <Input
                           id={`quantity-${index}`}
                           type="number"
                           min="1"
                           value={item.quantity}
                           onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                          className="h-8 text-xs"
+                          className="h-10 text-sm mt-1"
                           required
                         />
                       </div>
                       
-                      <div className="w-24">
-                        <Label htmlFor={`price-${index}`} className="text-xs text-gray-600">Price</Label>
+                      <div className="w-32">
+                        <Label htmlFor={`price-${index}`} className="text-sm text-gray-600">Unit Price</Label>
                         <Input
                           id={`price-${index}`}
                           type="number"
@@ -237,9 +198,16 @@ const BillPage: React.FC = () => {
                           step="0.01"
                           value={item.unit_price}
                           onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                          className="h-8 text-xs"
+                          className="h-10 text-sm mt-1"
                           required
                         />
+                      </div>
+                      
+                      <div className="w-32">
+                        <Label className="text-sm text-gray-600">Amount</Label>
+                        <div className="h-10 px-3 py-2 border rounded-md bg-gray-100 text-sm font-medium flex items-center">
+                          {(item.quantity * item.unit_price).toFixed(2)}
+                        </div>
                       </div>
                       
                       {formData.items.length > 1 && (
@@ -248,9 +216,9 @@ const BillPage: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => removeItem(index)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          className="h-10 w-10 p-0 text-red-600 hover:text-red-700"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
@@ -260,28 +228,27 @@ const BillPage: React.FC = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={addItem}
-                  className="w-full h-8 text-xs"
+                  className="w-full h-10 text-sm"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Item
                 </Button>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes" className="text-xs font-semibold text-gray-700">Notes (Optional)</Label>
+                <Label htmlFor="notes" className="text-sm font-semibold text-gray-700">Notes (Optional)</Label>
                 <Input
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Enter notes"
-                  className="h-8 text-xs"
+                  className="h-10 text-sm"
                 />
               </div>
 
-              <div className="flex justify-between items-center">
-                <div className="text-sm font-semibold text-gray-700">
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="text-lg font-bold text-gray-900">
                   Total: {new Intl.NumberFormat('en-US', { 
                     style: 'currency', 
                     currency: 'PKR',
@@ -289,106 +256,11 @@ const BillPage: React.FC = () => {
                   }).format(calculateTotal(formData.items))}
                 </div>
 
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)} className="font-medium text-xs h-8">
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={state.isLoading} className="font-semibold text-xs h-8">
-                    {state.isLoading ? 'Generating...' : 'Generate Bill'}
-                  </Button>
-                </div>
+                <Button type="submit" disabled={state.isLoading} className="font-semibold text-sm h-10 px-8">
+                  {state.isLoading ? 'Generating...' : 'Generate Bill'}
+                </Button>
               </div>
             </form>
-          </DialogContent>
-        </Dialog>
-
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold text-gray-900">
-              Bill List ({filteredBills.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {filteredBills.length === 0 ? (
-              <div className="text-center py-8">
-                <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500 font-medium">
-                  {searchQuery ? 'No bills found matching your search' : 'No bills found'}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {!searchQuery && 'Generate your first bill to get started'}
-                </p>
-              </div>
-            ) : (
-              <div className="w-full overflow-x-auto">
-                <div className="min-w-[800px]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-gray-200">
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Serial No</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[150px]">Customer</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Total Amount</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[120px]">Date</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[80px]">Status</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-xs min-w-[80px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredBills.map((bill) => {
-                        return (
-                          <TableRow key={bill.id} className="hover:bg-gray-50 cursor-pointer border-gray-100 transition-colors">
-                            <TableCell className="font-semibold text-gray-900 text-xs">{bill.serial_no}</TableCell>
-                            <TableCell className="font-semibold text-gray-900 text-xs">{bill.customer_name}</TableCell>
-                            <TableCell className="font-medium text-gray-700 text-xs">
-                              {new Intl.NumberFormat('en-US', { 
-                                style: 'currency', 
-                                currency: 'PKR',
-                                currencyDisplay: 'narrowSymbol'
-                              }).format(bill.total_amount)}
-                            </TableCell>
-                            <TableCell className="text-xs text-gray-500 font-medium">
-                              {format(new Date(bill.date), 'MMM d, yyyy')}
-                            </TableCell>
-                            <TableCell className="text-xs">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                bill.status === 'completed' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {bill.status}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary/10">
-                                    <MoreVertical className="h-3 w-3 text-primary" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="min-w-[140px]">
-                                  <DropdownMenuItem className="text-xs">
-                                    <Edit className="mr-2 h-3 w-3" />
-                                    Edit Bill
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs text-red-600 focus:text-red-600">
-                                    <Trash2 className="mr-2 h-3 w-3" />
-                                    Delete Bill
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-xs">
-                                    <Download className="mr-2 h-3 w-3" />
-                                    Download Bill
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
