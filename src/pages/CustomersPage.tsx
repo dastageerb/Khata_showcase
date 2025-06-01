@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Search, ChevronRight, Users, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Users, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+import EditCustomerDialog from '@/components/dialogs/EditCustomerDialog';
 
 interface CustomersPageProps {
   onNavigate: (path: string, params?: { [key: string]: string }) => void;
@@ -21,6 +23,9 @@ const CustomersPage: React.FC<CustomersPageProps> = ({ onNavigate }) => {
   const { toast } = useToast();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -92,20 +97,34 @@ const CustomersPage: React.FC<CustomersPageProps> = ({ onNavigate }) => {
 
   const handleEditCustomer = (customer: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Add edit functionality here
-    console.log('Edit customer:', customer);
+    setSelectedCustomer(customer);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateCustomer = (updatedCustomer: any) => {
+    dispatch({ type: 'UPDATE_CUSTOMER', payload: updatedCustomer });
+    toast({
+      title: "Customer Updated",
+      description: `${updatedCustomer.name} has been updated successfully`
+    });
   };
 
   const handleDeleteCustomer = (customer: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    if (window.confirm(`Are you sure you want to delete ${customer.name}?`)) {
-      dispatch({ type: 'DELETE_CUSTOMER', payload: customer.id });
+    setSelectedCustomer(customer);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteCustomer = () => {
+    if (selectedCustomer) {
+      dispatch({ type: 'DELETE_CUSTOMER', payload: selectedCustomer.id });
       toast({
         title: "Customer Deleted",
-        description: `${customer.name} has been removed from your customer list`,
+        description: `${selectedCustomer.name} has been removed from your customer list`,
         variant: "destructive"
       });
+      setIsDeleteDialogOpen(false);
+      setSelectedCustomer(null);
     }
   };
 
@@ -305,6 +324,35 @@ const CustomersPage: React.FC<CustomersPageProps> = ({ onNavigate }) => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Customer Dialog */}
+        <EditCustomerDialog 
+          customer={selectedCustomer}
+          isOpen={isEditDialogOpen}
+          onClose={() => {
+            setIsEditDialogOpen(false);
+            setSelectedCustomer(null);
+          }}
+          onUpdate={handleUpdateCustomer}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {selectedCustomer?.name}? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteCustomer} className="bg-red-600 hover:bg-red-700">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
