@@ -65,7 +65,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ onBack }) => {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h1 className="text-3xl font-bold text-primary">Create Account</h1>
-          <p className="text-gray-500">Join Al Mehran Radiator Portal</p>
+          <p className="text-gray-500">Join Khata Pro Portal</p>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">

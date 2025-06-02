@@ -15,8 +15,8 @@ const SettingsPage: React.FC = () => {
   
   const [formData, setFormData] = useState({
     shop_name: state.settings.shop_name,
-    shop_address: 'Near MCB bank Gaari khata, station road Hyderabad',
-    admin_phone: '022-2783373',
+    shop_address: 'Karachi Pakistan',
+    admin_phone: '022-12345678',
     last_bill_serial: state.settings.last_bill_serial
   });
   

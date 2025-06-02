@@ -643,8 +643,8 @@ const BillingHistoryPage: React.FC = () => {
               <>
                 <div className="text-center space-y-1">
                   <h2 className="text-xl font-bold">{state.settings.shop_name}</h2>
-                  <p className="text-sm">Near MCB bank Gaari khata, station road Hyderabad</p>
-                  <p className="text-sm">Contact: 022-2783373</p>
+                  <p className="text-sm">Karachi Pakistan</p>
+                  <p className="text-sm">Contact: 021-123456</p>
                 </div>
                 
                 <Separator />

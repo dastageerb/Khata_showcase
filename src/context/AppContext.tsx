@@ -282,7 +282,7 @@ const initialState: AppState = {
   ],
   settings: {
     id: "settings-001",
-    shop_name: "Al Mehran Radiator",
+    shop_name: "Khata Pro",
     shop_address: "Main Market, Lahore, Pakistan",
     admin_phone: "+92-300-1234567",
     last_bill_serial: 8000,

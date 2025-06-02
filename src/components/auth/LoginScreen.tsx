@@ -63,7 +63,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onShowSignup }) => {
               className="cursor-pointer select-none"
             >
               <h1 className="text-4xl font-bold text-primary tracking-tight font-inter">
-                Al Mehran Radiator
+                Khata Pro
               </h1>
               <p className="text-base text-gray-600 mt-3 font-medium font-inter">Financial Management Portal</p>
             </div>
